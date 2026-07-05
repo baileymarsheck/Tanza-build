@@ -30,7 +30,7 @@ export interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   {
     id: "dashboard",
-    label: "Dashboard",
+    label: "Home Dashboard",
     href: "/dashboard",
     icon: Home,
     roles: ["admin", "fellow"],

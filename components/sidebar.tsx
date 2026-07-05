@@ -87,14 +87,20 @@ export function Sidebar() {
 
         <nav className="flex-1 space-y-0.5 overflow-y-auto p-3">
           {visibleItems.map((item) => {
-            const isActive =
-              isNavItemActive(item, pathname) || openItemId === item.id;
+            // Two distinct highlight states:
+            //  - current page ("you are here") → committed brand-orange fill
+            //  - flyout open ("considering") → tentative outlined white
+            // Current wins when an item is both, so the anchor stays stable.
+            const isCurrent = isNavItemActive(item, pathname);
+            const isConsidering = openItemId === item.id && !isCurrent;
             const Icon = item.icon;
-            const sharedClasses = `flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm transition-colors ${
-              isActive
-                ? "bg-brand-orange/15 text-brand-orange"
-                : "text-white/70 hover:bg-white/5 hover:text-white"
-            }`;
+
+            const stateClasses = isCurrent
+              ? "bg-brand-orange/15 text-brand-orange"
+              : isConsidering
+                ? "bg-white/10 text-white font-medium ring-1 ring-inset ring-white/25"
+                : "text-white/70 hover:bg-white/5 hover:text-white";
+            const sharedClasses = `flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm transition-colors ${stateClasses}`;
 
             if (item.hasFlyout) {
               return (
