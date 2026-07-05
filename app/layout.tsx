@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { CurrentProfileProvider } from "@/lib/current-profile";
+import { CurriculumProvider } from "@/lib/curriculum";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -29,7 +30,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
-        <CurrentProfileProvider>{children}</CurrentProfileProvider>
+        <CurrentProfileProvider>
+          <CurriculumProvider>{children}</CurriculumProvider>
+        </CurrentProfileProvider>
       </body>
     </html>
   );

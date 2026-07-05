@@ -1,0 +1,194 @@
+"use client";
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import {
+  CURRICULUM_STORAGE_KEY,
+  SEED_CURRICULUM,
+} from "@/lib/curriculum-data";
+import type {
+  ClassRecord,
+  ClassResource,
+  ModuleWithClasses,
+} from "@/lib/types";
+
+interface FoundClass {
+  module: ModuleWithClasses;
+  klass: ClassRecord;
+}
+
+interface CurriculumContextValue {
+  modules: ModuleWithClasses[];
+  getClass: (classId: string) => FoundClass | null;
+  toggleClassStatus: (classId: string) => void;
+  updateClass: (classId: string, patch: Partial<ClassRecord>) => void;
+  addClass: (moduleId: string) => void;
+  addModule: () => void;
+  resetToSample: () => void;
+}
+
+const CurriculumContext = createContext<CurriculumContextValue | null>(null);
+
+function makeId(prefix: string) {
+  return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+// A future Supabase-backed implementation would swap the localStorage read/
+// write below for queries against the modules / classes / class_resources
+// tables — the context surface (modules + these actions) stays the same, so
+// nothing consuming useCurriculum() would change.
+export function CurriculumProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [modules, setModules] = useState<ModuleWithClasses[]>(SEED_CURRICULUM);
+
+  // Load any admin edits from a previous session. Runs client-side only, so
+  // the first render matches the server (seed) and there's no hydration gap.
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(CURRICULUM_STORAGE_KEY);
+      if (stored) {
+        setModules(JSON.parse(stored) as ModuleWithClasses[]);
+      }
+    } catch {
+      // Corrupt or unavailable storage — keep the seed.
+    }
+  }, []);
+
+  // Persist every change so admin edits survive a refresh.
+  const commit = useCallback((next: ModuleWithClasses[]) => {
+    setModules(next);
+    try {
+      window.localStorage.setItem(CURRICULUM_STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      // Ignore storage write failures — in-memory state still updates.
+    }
+  }, []);
+
+  const getClass = useCallback(
+    (classId: string): FoundClass | null => {
+      for (const module of modules) {
+        const klass = module.classes.find((c) => c.id === classId);
+        if (klass) return { module, klass };
+      }
+      return null;
+    },
+    [modules]
+  );
+
+  const mapClass = useCallback(
+    (classId: string, fn: (c: ClassRecord) => ClassRecord) => {
+      commit(
+        modules.map((module) => ({
+          ...module,
+          classes: module.classes.map((c) => (c.id === classId ? fn(c) : c)),
+        }))
+      );
+    },
+    [modules, commit]
+  );
+
+  const toggleClassStatus = useCallback(
+    (classId: string) => {
+      mapClass(classId, (c) => ({
+        ...c,
+        status: c.status === "released" ? "locked" : "released",
+      }));
+    },
+    [mapClass]
+  );
+
+  const updateClass = useCallback(
+    (classId: string, patch: Partial<ClassRecord>) => {
+      mapClass(classId, (c) => ({ ...c, ...patch }));
+    },
+    [mapClass]
+  );
+
+  const addClass = useCallback(
+    (moduleId: string) => {
+      commit(
+        modules.map((module) =>
+          module.id === moduleId
+            ? {
+                ...module,
+                classes: [
+                  ...module.classes,
+                  {
+                    id: makeId("cls"),
+                    moduleId,
+                    title: "Untitled class",
+                    summary: "",
+                    status: "locked",
+                    notes: "",
+                    transcript: "",
+                    resources: [] as ClassResource[],
+                  },
+                ],
+              }
+            : module
+        )
+      );
+    },
+    [modules, commit]
+  );
+
+  const addModule = useCallback(() => {
+    commit([
+      ...modules,
+      {
+        id: makeId("mod"),
+        title: "Untitled module",
+        description: "",
+        classes: [],
+      },
+    ]);
+  }, [modules, commit]);
+
+  const resetToSample = useCallback(() => {
+    commit(SEED_CURRICULUM);
+  }, [commit]);
+
+  const value = useMemo(
+    () => ({
+      modules,
+      getClass,
+      toggleClassStatus,
+      updateClass,
+      addClass,
+      addModule,
+      resetToSample,
+    }),
+    [
+      modules,
+      getClass,
+      toggleClassStatus,
+      updateClass,
+      addClass,
+      addModule,
+      resetToSample,
+    ]
+  );
+
+  return (
+    <CurriculumContext.Provider value={value}>
+      {children}
+    </CurriculumContext.Provider>
+  );
+}
+
+export function useCurriculum() {
+  const context = useContext(CurriculumContext);
+  if (!context) {
+    throw new Error("useCurriculum must be used within a CurriculumProvider");
+  }
+  return context;
+}
