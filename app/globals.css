@@ -3,6 +3,12 @@
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Tanza Partners brand: deep navy wordmark, warm orange accent. */
+  --color-brand-navy: #17213a;
+  --color-brand-navy-light: #29365a;
+  --color-brand-orange: #ea6a39;
+  --color-brand-orange-dark: #d1552a;
 }
 
 /* The app shell is a deliberately light UI (slate canvas, white cards), so we

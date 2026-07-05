@@ -17,6 +17,12 @@ export interface NavItem {
   icon: LucideIcon;
   roles: Role[];
   description: string;
+  // When true, clicking this item in the sidebar opens a slide-out panel
+  // (label + description + an explicit "Open" link) instead of navigating
+  // immediately — the Canvas-style pattern. Items without it (e.g.
+  // Dashboard) navigate straight to their route, since there's nothing to
+  // preview first.
+  hasFlyout?: boolean;
 }
 
 // Single source of truth for the sidebar. Adding a future feature area means
@@ -38,6 +44,7 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ["admin"],
     description:
       "Create and edit modules and classes, upload resources and toolkits, and manage class release schedules.",
+    hasFlyout: true,
   },
   {
     id: "classes",
@@ -47,6 +54,7 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ["fellow"],
     description:
       "Recordings, transcripts, notes, and resources for each class as it's released.",
+    hasFlyout: true,
   },
   {
     id: "assessments",
@@ -56,6 +64,7 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ["admin", "fellow"],
     description:
       "Multiple-choice and short-answer assessments, and practical case study submissions.",
+    hasFlyout: true,
   },
   {
     id: "performance",
@@ -65,6 +74,7 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ["admin", "fellow"],
     description:
       "Technical, Strategic, and Leadership Aptitude tracked over time — for a fellow or across the cohort.",
+    hasFlyout: true,
   },
   {
     id: "submissions",
@@ -74,6 +84,7 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ["admin"],
     description:
       "Review case study and assessment submissions, and leave written feedback.",
+    hasFlyout: true,
   },
   {
     id: "competencies",
@@ -83,6 +94,7 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ["admin"],
     description:
       "Manage competencies, aptitude weightings, and learning pathways without touching application code.",
+    hasFlyout: true,
   },
 ];
 

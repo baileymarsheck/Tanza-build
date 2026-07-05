@@ -2,6 +2,7 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -55,23 +56,28 @@ export function CurrentProfileProvider({
       return;
     }
 
-    supabase
-      .from("profiles")
-      .select("id, name, role")
-      .order("created_at", { ascending: true })
-      .then(({ data, error }) => {
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("id, name, role")
+          .order("created_at", { ascending: true });
+
         if (error || !data || data.length === 0) {
           return;
         }
         setAllProfiles(data as Profile[]);
         setIsUsingFallbackData(false);
-      });
+      } catch {
+        // Network failure — stay on the baked-in fallback profiles.
+      }
+    })();
   }, []);
 
-  const setActiveProfile = (id: string) => {
+  const setActiveProfile = useCallback((id: string) => {
     setActiveProfileId(id);
     window.localStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, id);
-  };
+  }, []);
 
   const profile = useMemo(
     () =>
@@ -81,7 +87,7 @@ export function CurrentProfileProvider({
 
   const value = useMemo(
     () => ({ profile, allProfiles, setActiveProfile, isUsingFallbackData }),
-    [profile, allProfiles, isUsingFallbackData]
+    [profile, allProfiles, setActiveProfile, isUsingFallbackData]
   );
 
   return (

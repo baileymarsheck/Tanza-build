@@ -12,7 +12,7 @@ export default function DashboardPage() {
 
   return (
     <div className="max-w-3xl">
-      <h2 className="text-xl font-semibold text-slate-900">
+      <h2 className="text-xl font-semibold text-brand-navy">
         Welcome, {profile.name.split(" ")[0]}
       </h2>
       <p className="mt-1 text-sm text-slate-600">
@@ -29,8 +29,8 @@ export default function DashboardPage() {
               key={item.id}
               className="rounded-lg border border-slate-200 bg-white p-4"
             >
-              <div className="flex items-center gap-2 text-slate-900">
-                <Icon size={18} strokeWidth={1.75} className="text-orange-500" />
+              <div className="flex items-center gap-2 text-brand-navy">
+                <Icon size={18} strokeWidth={1.75} className="text-brand-orange" />
                 <span className="font-medium">{item.label}</span>
               </div>
               <p className="mt-1.5 text-sm text-slate-600">

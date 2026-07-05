@@ -34,10 +34,10 @@ export function PlaceholderPage({ navId }: { navId: string }) {
 
   return (
     <div className="max-w-2xl rounded-lg border border-dashed border-slate-300 bg-white p-6">
-      <p className="text-xs font-medium uppercase tracking-wide text-orange-500">
+      <p className="text-xs font-medium uppercase tracking-wide text-brand-orange">
         Coming soon
       </p>
-      <h2 className="mt-1 text-xl font-semibold text-slate-900">
+      <h2 className="mt-1 text-xl font-semibold text-brand-navy">
         {item.label}
       </h2>
       <p className="mt-2 text-sm leading-relaxed text-slate-600">
