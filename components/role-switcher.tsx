@@ -8,10 +8,14 @@ export function RoleSwitcher() {
 
   return (
     <div className="border-b border-slate-800 p-4">
-      <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-400">
+      <label
+        htmlFor="role-switcher"
+        className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-400"
+      >
         Viewing as
       </label>
       <select
+        id="role-switcher"
         value={profile.id}
         onChange={(e) => setActiveProfile(e.target.value)}
         className="w-full rounded-md border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-orange-500"

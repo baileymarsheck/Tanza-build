@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { NAV_ITEMS } from "@/lib/nav-config";
+import { isNavItemActive, NAV_ITEMS } from "@/lib/nav-config";
 import { useCurrentProfile } from "@/lib/current-profile";
 import { RoleSwitcher } from "@/components/role-switcher";
 
@@ -25,7 +25,7 @@ export function Sidebar() {
 
       <nav className="flex-1 space-y-0.5 overflow-y-auto p-3">
         {visibleItems.map((item) => {
-          const isActive = pathname.startsWith(item.href);
+          const isActive = isNavItemActive(item, pathname);
           const Icon = item.icon;
           return (
             <Link

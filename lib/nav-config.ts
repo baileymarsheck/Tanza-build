@@ -85,3 +85,14 @@ export const NAV_ITEMS: NavItem[] = [
       "Manage competencies, aptitude weightings, and learning pathways without touching application code.",
   },
 ];
+
+// Matches the current route to a nav item: exact match, or a nested route
+// under it (e.g. /assessments/123). Avoids the prefix collision that a bare
+// startsWith would cause between sibling routes sharing a prefix.
+export function isNavItemActive(item: NavItem, pathname: string): boolean {
+  return pathname === item.href || pathname.startsWith(`${item.href}/`);
+}
+
+export function getActiveNavItem(pathname: string): NavItem | undefined {
+  return NAV_ITEMS.find((item) => isNavItemActive(item, pathname));
+}

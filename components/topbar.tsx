@@ -1,14 +1,14 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { NAV_ITEMS } from "@/lib/nav-config";
+import { getActiveNavItem } from "@/lib/nav-config";
 import { useCurrentProfile } from "@/lib/current-profile";
 
 export function Topbar() {
   const pathname = usePathname();
   const { profile } = useCurrentProfile();
 
-  const activeItem = NAV_ITEMS.find((item) => pathname.startsWith(item.href));
+  const activeItem = getActiveNavItem(pathname);
 
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6">
