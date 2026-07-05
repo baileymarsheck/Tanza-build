@@ -27,6 +27,14 @@ export interface ClassResource {
   kind: ResourceKind;
 }
 
+export interface ClassVideo {
+  id: string;
+  title: string;
+  // Public URL of a file in the Supabase Storage 'class-videos' bucket, or
+  // any directly-playable video URL when added manually.
+  url: string;
+}
+
 export interface ClassRecord {
   id: string;
   moduleId: string;
@@ -36,6 +44,9 @@ export interface ClassRecord {
   notes: string;
   transcript: string;
   resources: ClassResource[];
+  // Optional so curriculum saved before videos existed (older localStorage,
+  // seed rows) stays valid; treated as [] wherever it's read.
+  videos?: ClassVideo[];
 }
 
 export interface Module {

@@ -1,7 +1,7 @@
 import type { ModuleWithClasses } from "@/lib/types";
 
 // Bump this when the seed shape changes so stale localStorage is discarded.
-export const CURRICULUM_STORAGE_KEY = "tanza:curriculum:v1";
+export const CURRICULUM_STORAGE_KEY = "tanza:curriculum:v2";
 
 // Seed curriculum mirroring the five Phase 1 modules from the Fellowship
 // outline. Foundations is released so fellows have something to work through;
@@ -47,6 +47,16 @@ export const SEED_CURRICULUM: ModuleWithClasses[] = [
             label: "Program 1 Theory of Change (1-pager)",
             url: "https://example.org/program-1-toc.pdf",
             kind: "template",
+          },
+        ],
+        // A short placeholder clip so the video player is visible out of the
+        // box on this one class. Real recordings would be uploaded to the
+        // Supabase 'class-videos' bucket via the class editor.
+        videos: [
+          {
+            id: "vid-onb1-sample",
+            title: "Class recording (sample)",
+            url: "/sample-class-recording.mp4",
           },
         ],
       },

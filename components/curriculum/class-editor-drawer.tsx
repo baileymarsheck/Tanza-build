@@ -1,9 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Plus, Trash2, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Plus, Trash2, Upload, X } from "lucide-react";
 import { useCurriculum } from "@/lib/curriculum";
-import type { ClassRecord, ClassResource, ResourceKind } from "@/lib/types";
+import { uploadClassVideo } from "@/lib/supabase/storage";
+import type {
+  ClassRecord,
+  ClassResource,
+  ClassVideo,
+  ResourceKind,
+} from "@/lib/types";
 
 const RESOURCE_KINDS: ResourceKind[] = [
   "reading",
@@ -17,6 +23,10 @@ function makeResourceId() {
   return `res-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+function makeVideoId() {
+  return `vid-${Math.random().toString(36).slice(2, 9)}`;
+}
+
 // Slide-over editor for a single class. Edits a local draft and only writes to
 // the store on Save, so an admin can back out with Cancel/Escape.
 export function ClassEditorDrawer({
@@ -28,9 +38,13 @@ export function ClassEditorDrawer({
 }) {
   const { updateClass } = useCurriculum();
   const [draft, setDraft] = useState<ClassRecord | null>(klass);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setDraft(klass);
+    setUploadError(null);
   }, [klass]);
 
   useEffect(() => {
@@ -81,6 +95,68 @@ export function ClassEditorDrawer({
     );
   }
 
+  function updateVideo(id: string, fields: Partial<ClassVideo>) {
+    setDraft((d) =>
+      d
+        ? {
+            ...d,
+            videos: (d.videos ?? []).map((v) =>
+              v.id === id ? { ...v, ...fields } : v
+            ),
+          }
+        : d
+    );
+  }
+
+  function addVideoByUrl() {
+    setDraft((d) =>
+      d
+        ? {
+            ...d,
+            videos: [
+              ...(d.videos ?? []),
+              { id: makeVideoId(), title: "", url: "" },
+            ],
+          }
+        : d
+    );
+  }
+
+  function removeVideo(id: string) {
+    setDraft((d) =>
+      d ? { ...d, videos: (d.videos ?? []).filter((v) => v.id !== id) } : d
+    );
+  }
+
+  async function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-selecting the same file later
+    if (!file || !draft) return;
+
+    setUploading(true);
+    setUploadError(null);
+    try {
+      const url = await uploadClassVideo(file, draft.id);
+      setDraft((d) =>
+        d
+          ? {
+              ...d,
+              videos: [
+                ...(d.videos ?? []),
+                { id: makeVideoId(), title: file.name, url },
+              ],
+            }
+          : d
+      );
+    } catch (err) {
+      setUploadError(
+        err instanceof Error ? err.message : "Upload failed. Please try again."
+      );
+    } finally {
+      setUploading(false);
+    }
+  }
+
   function save() {
     if (!draft) return;
     updateClass(draft.id, {
@@ -89,6 +165,7 @@ export function ClassEditorDrawer({
       notes: draft.notes,
       transcript: draft.transcript,
       resources: draft.resources.filter((r) => r.label.trim() || r.url.trim()),
+      videos: (draft.videos ?? []).filter((v) => v.url.trim()),
     });
     onClose();
   }
@@ -160,6 +237,89 @@ export function ClassEditorDrawer({
                 className="input resize-y font-mono text-xs"
               />
             </Field>
+
+            <div>
+              <div className="mb-1.5 flex items-center justify-between">
+                <span className="text-sm font-medium text-slate-700">
+                  Videos
+                </span>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={addVideoByUrl}
+                    className="inline-flex items-center gap-1 text-sm font-medium text-brand-navy hover:text-brand-orange"
+                  >
+                    <Plus size={15} />
+                    Add URL
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="inline-flex items-center gap-1 text-sm font-medium text-brand-navy hover:text-brand-orange disabled:opacity-50"
+                  >
+                    <Upload size={15} />
+                    {uploading ? "Uploading…" : "Upload"}
+                  </button>
+                </div>
+              </div>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="video/*"
+                onChange={handleFileSelected}
+                className="hidden"
+              />
+
+              {uploadError && (
+                <p className="mb-2 rounded-md bg-red-50 px-2.5 py-1.5 text-xs text-red-700">
+                  {uploadError}
+                </p>
+              )}
+
+              <div className="space-y-2">
+                {(draft.videos ?? []).length === 0 && (
+                  <p className="text-sm text-slate-400">
+                    No videos yet. Upload a file (requires Supabase) or add a
+                    video URL.
+                  </p>
+                )}
+                {(draft.videos ?? []).map((v) => (
+                  <div
+                    key={v.id}
+                    className="rounded-lg border border-slate-200 p-2.5"
+                  >
+                    <div className="flex items-center gap-2">
+                      <input
+                        value={v.title}
+                        onChange={(e) =>
+                          updateVideo(v.id, { title: e.target.value })
+                        }
+                        placeholder="Title (e.g. Class recording)"
+                        className="input flex-1"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeVideo(v.id)}
+                        aria-label="Remove video"
+                        className="flex size-8 shrink-0 items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-600"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                    <input
+                      value={v.url}
+                      onChange={(e) =>
+                        updateVideo(v.id, { url: e.target.value })
+                      }
+                      placeholder="https://… (Supabase video URL)"
+                      className="input mt-2"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
 
             <div>
               <div className="mb-1.5 flex items-center justify-between">

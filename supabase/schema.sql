@@ -94,3 +94,33 @@ create policy "Classes are readable by anyone"
 drop policy if exists "Class resources are readable by anyone" on class_resources;
 create policy "Class resources are readable by anyone"
   on class_resources for select using (true);
+
+
+-- --------------------------------------------------------------------------
+-- Class videos
+--
+-- Each row is metadata pointing at a video. Uploaded recordings live in a
+-- Supabase Storage bucket named "class-videos"; `url` holds the public URL
+-- returned by getPublicUrl (see lib/supabase/storage.ts). A class can have
+-- several videos (e.g. the class recording plus a guest-speaker recording).
+--
+-- Storage setup (one-time, in the Supabase dashboard):
+--   1. Storage > New bucket > name "class-videos", mark it Public.
+--   2. Public buckets already allow anonymous read of getPublicUrl links.
+--      To let admins upload, add a Storage policy for INSERT (tighten to
+--      admins once real Supabase Auth is wired in).
+
+create table if not exists class_videos (
+  id text primary key,
+  class_id text not null references classes (id) on delete cascade,
+  title text not null default '',
+  url text not null,
+  position int not null default 0
+);
+create index if not exists class_videos_class_id_idx on class_videos (class_id);
+
+alter table class_videos enable row level security;
+
+drop policy if exists "Class videos are readable by anyone" on class_videos;
+create policy "Class videos are readable by anyone"
+  on class_videos for select using (true);
