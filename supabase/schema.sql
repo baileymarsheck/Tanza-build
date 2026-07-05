@@ -55,8 +55,11 @@ create table if not exists classes (
   module_id text not null references modules (id) on delete cascade,
   title text not null,
   summary text not null default '',
-  -- 'locked' | 'released'; kept as text so more states can be added later.
-  status text not null default 'locked' check (status in ('locked', 'released')),
+  -- 'locked' | 'released' | 'scheduled'. When 'scheduled', release_at holds
+  -- the time the class becomes visible to fellows automatically.
+  status text not null default 'locked'
+    check (status in ('locked', 'released', 'scheduled')),
+  release_at timestamptz,
   notes text not null default '',
   transcript text not null default '',
   position int not null default 0,

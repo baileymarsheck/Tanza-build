@@ -4,6 +4,11 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Lock } from "lucide-react";
 import { useCurriculum } from "@/lib/curriculum";
+import {
+  formatReleaseDate,
+  isClassReleased,
+  isClassScheduledPending,
+} from "@/lib/class-availability";
 import { ResourceIcon } from "@/components/curriculum/resource-icon";
 
 export default function ClassReaderPage() {
@@ -37,7 +42,8 @@ export default function ClassReaderPage() {
   const videos = klass.videos ?? [];
 
   // Guard direct-URL access to a class that hasn't been released.
-  if (klass.status === "locked") {
+  if (!isClassReleased(klass)) {
+    const scheduledPending = isClassScheduledPending(klass);
     return (
       <div className="max-w-2xl space-y-4">
         {backLink}
@@ -47,8 +53,14 @@ export default function ClassReaderPage() {
             <p className="font-medium text-slate-900">This class is locked</p>
             <p className="mt-1 text-sm text-slate-600">
               <span className="font-medium text-slate-700">{klass.title}</span>{" "}
-              hasn&apos;t been released yet. It&apos;ll open here once Tanza
-              makes it available.
+              {scheduledPending && klass.releaseAt ? (
+                <>unlocks on {formatReleaseDate(klass.releaseAt)}.</>
+              ) : (
+                <>
+                  hasn&apos;t been released yet. It&apos;ll open here once Tanza
+                  makes it available.
+                </>
+              )}
             </p>
           </div>
         </div>

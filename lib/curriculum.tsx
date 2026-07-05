@@ -12,6 +12,7 @@ import {
   CURRICULUM_STORAGE_KEY,
   SEED_CURRICULUM,
 } from "@/lib/curriculum-data";
+import { isClassReleased } from "@/lib/class-availability";
 import type {
   ClassRecord,
   ClassResource,
@@ -96,11 +97,14 @@ export function CurriculumProvider({
     [modules, commit]
   );
 
+  // Manual toggle: flip the class's *effective* released state and commit it
+  // as a manual choice, clearing any schedule (manual always overrides).
   const toggleClassStatus = useCallback(
     (classId: string) => {
       mapClass(classId, (c) => ({
         ...c,
-        status: c.status === "released" ? "locked" : "released",
+        status: isClassReleased(c) ? "locked" : "released",
+        releaseAt: null,
       }));
     },
     [mapClass]

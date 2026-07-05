@@ -8,10 +8,13 @@ export interface Profile {
 
 // --- Curriculum ---------------------------------------------------------
 
-// A class is either still locked (not yet available to fellows) or released.
-// Kept as a string status rather than a boolean so more states (e.g.
-// "scheduled") can be added later without a data migration.
-export type ClassStatus = "locked" | "released";
+// How a class becomes available to fellows:
+//  - "released": manually visible now
+//  - "locked": manually hidden
+//  - "scheduled": hidden until `releaseAt`, then automatically visible
+// A manual toggle sets "released"/"locked" and clears any schedule, so a
+// manual choice always overrides a scheduled date.
+export type ClassStatus = "locked" | "released" | "scheduled";
 
 export type ResourceKind =
   | "template"
@@ -41,6 +44,8 @@ export interface ClassRecord {
   title: string;
   summary: string;
   status: ClassStatus;
+  // ISO timestamp; only meaningful when status === "scheduled".
+  releaseAt?: string | null;
   notes: string;
   transcript: string;
   resources: ClassResource[];

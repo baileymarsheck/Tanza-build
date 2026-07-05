@@ -1,8 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight, Lock } from "lucide-react";
+import { CalendarClock, ChevronRight, Lock } from "lucide-react";
 import { useCurriculum } from "@/lib/curriculum";
+import {
+  formatReleaseDate,
+  isClassReleased,
+  isClassScheduledPending,
+} from "@/lib/class-availability";
 import type { ClassRecord } from "@/lib/types";
 
 export default function ClassesPage() {
@@ -18,8 +23,8 @@ export default function ClassesPage() {
 
       <div className="mt-6 space-y-5">
         {modules.map((module) => {
-          const releasedCount = module.classes.filter(
-            (c) => c.status === "released"
+          const releasedCount = module.classes.filter((c) =>
+            isClassReleased(c)
           ).length;
           return (
             <section
@@ -56,15 +61,22 @@ export default function ClassesPage() {
 }
 
 function ClassRow({ klass }: { klass: ClassRecord }) {
-  if (klass.status === "locked") {
+  if (!isClassReleased(klass)) {
+    const scheduledPending = isClassScheduledPending(klass);
     return (
       <li className="flex items-center gap-3 px-5 py-3.5">
-        <Lock size={16} className="shrink-0 text-slate-300" />
+        {scheduledPending ? (
+          <CalendarClock size={16} className="shrink-0 text-amber-400" />
+        ) : (
+          <Lock size={16} className="shrink-0 text-slate-300" />
+        )}
         <div className="min-w-0 flex-1">
           <span className="font-medium text-slate-400">{klass.title}</span>
         </div>
         <span className="shrink-0 text-xs font-medium text-slate-400">
-          Locked
+          {scheduledPending && klass.releaseAt
+            ? `Unlocks ${formatReleaseDate(klass.releaseAt)}`
+            : "Locked"}
         </span>
       </li>
     );
