@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { CurrentProfileProvider } from "@/lib/current-profile";
 import { CurriculumProvider } from "@/lib/curriculum";
+import { AssessmentsProvider } from "@/lib/assessments";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -31,7 +32,9 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col">
         <CurrentProfileProvider>
-          <CurriculumProvider>{children}</CurriculumProvider>
+          <CurriculumProvider>
+            <AssessmentsProvider>{children}</AssessmentsProvider>
+          </CurriculumProvider>
         </CurrentProfileProvider>
       </body>
     </html>

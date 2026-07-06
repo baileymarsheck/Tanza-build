@@ -12,7 +12,8 @@ import {
   CURRICULUM_STORAGE_KEY,
   SEED_CURRICULUM,
 } from "@/lib/curriculum-data";
-import { isClassReleased } from "@/lib/class-availability";
+import { isReleased } from "@/lib/availability";
+import { makeId } from "@/lib/id";
 import type {
   ClassRecord,
   ClassResource,
@@ -35,10 +36,6 @@ interface CurriculumContextValue {
 }
 
 const CurriculumContext = createContext<CurriculumContextValue | null>(null);
-
-function makeId(prefix: string) {
-  return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
-}
 
 // A future Supabase-backed implementation would swap the localStorage read/
 // write below for queries against the modules / classes / class_resources
@@ -103,7 +100,7 @@ export function CurriculumProvider({
     (classId: string) => {
       mapClass(classId, (c) => ({
         ...c,
-        status: isClassReleased(c) ? "locked" : "released",
+        status: isReleased(c) ? "locked" : "released",
         releaseAt: null,
       }));
     },

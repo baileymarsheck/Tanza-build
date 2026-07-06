@@ -2,18 +2,24 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Lock } from "lucide-react";
+import { ArrowLeft, CalendarClock, ChevronRight } from "lucide-react";
 import { useCurriculum } from "@/lib/curriculum";
+import { useAssessments } from "@/lib/assessments";
+import { useCurrentProfile } from "@/lib/current-profile";
 import {
   formatReleaseDate,
-  isClassReleased,
-  isClassScheduledPending,
-} from "@/lib/class-availability";
+  isReleased,
+  isScheduledPending,
+} from "@/lib/availability";
 import { ResourceIcon } from "@/components/curriculum/resource-icon";
+import { LockedPanel } from "@/components/locked-panel";
+import { AttemptStatusBadge } from "@/components/assessments/attempt-status-badge";
 
 export default function ClassReaderPage() {
   const params = useParams<{ classId: string }>();
   const { getClass } = useCurriculum();
+  const { getAssessmentsForClass, getAttempt } = useAssessments();
+  const { profile } = useCurrentProfile();
 
   const found = getClass(params.classId);
 
@@ -40,30 +46,21 @@ export default function ClassReaderPage() {
 
   const { module, klass } = found;
   const videos = klass.videos ?? [];
+  const assessments = getAssessmentsForClass(klass.id).filter(
+    (a) => isReleased(a) || isScheduledPending(a)
+  );
 
   // Guard direct-URL access to a class that hasn't been released.
-  if (!isClassReleased(klass)) {
-    const scheduledPending = isClassScheduledPending(klass);
+  if (!isReleased(klass)) {
     return (
       <div className="max-w-2xl space-y-4">
         {backLink}
-        <div className="flex items-start gap-3 rounded-lg border border-slate-200 bg-white p-6">
-          <Lock size={20} className="mt-0.5 shrink-0 text-slate-400" />
-          <div>
-            <p className="font-medium text-slate-900">This class is locked</p>
-            <p className="mt-1 text-sm text-slate-600">
-              <span className="font-medium text-slate-700">{klass.title}</span>{" "}
-              {scheduledPending && klass.releaseAt ? (
-                <>unlocks on {formatReleaseDate(klass.releaseAt)}.</>
-              ) : (
-                <>
-                  hasn&apos;t been released yet. It&apos;ll open here once Tanza
-                  makes it available.
-                </>
-              )}
-            </p>
-          </div>
-        </div>
+        <LockedPanel
+          noun="class"
+          name={klass.title}
+          scheduledPending={isScheduledPending(klass)}
+          releaseAt={klass.releaseAt}
+        />
       </div>
     );
   }
@@ -131,6 +128,52 @@ export default function ClassReaderPage() {
               </pre>
             </Section>
           )}
+
+          <Section title="Assessments">
+            {assessments.length === 0 ? (
+              <p className="text-sm text-slate-400">
+                No assessments for this class yet.
+              </p>
+            ) : (
+              <ul className="space-y-2">
+                {assessments.map((a) => {
+                  const scheduledPending = isScheduledPending(a);
+                  if (scheduledPending) {
+                    return (
+                      <li
+                        key={a.id}
+                        className="flex items-center gap-3 rounded-lg border border-slate-200 px-3.5 py-2.5"
+                      >
+                        <CalendarClock size={16} className="shrink-0 text-amber-400" />
+                        <span className="flex-1 text-sm font-medium text-slate-400">
+                          {a.title}
+                        </span>
+                        <span className="shrink-0 text-xs font-medium text-slate-400">
+                          {a.releaseAt
+                            ? `Unlocks ${formatReleaseDate(a.releaseAt)}`
+                            : "Locked"}
+                        </span>
+                      </li>
+                    );
+                  }
+                  return (
+                    <li key={a.id}>
+                      <Link
+                        href={`/assessments/${a.id}`}
+                        className="flex items-center gap-3 rounded-lg border border-slate-200 px-3.5 py-2.5 transition-colors hover:border-brand-orange hover:bg-orange-50/40"
+                      >
+                        <span className="flex-1 text-sm font-medium text-slate-800">
+                          {a.title}
+                        </span>
+                        <AttemptStatusBadge attempt={getAttempt(a.id, profile.id)} />
+                        <ChevronRight size={16} className="shrink-0 text-slate-400" />
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </Section>
         </div>
 
         {/* Resources sidebar */}

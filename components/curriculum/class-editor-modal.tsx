@@ -1,18 +1,21 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Plus, Trash2, Upload, X } from "lucide-react";
+import { Pencil, Plus, Trash2, Upload, X } from "lucide-react";
 import { useCurriculum } from "@/lib/curriculum";
+import { useAssessments } from "@/lib/assessments";
 import {
-  datetimeLocalToIso,
-  defaultScheduleIso,
-  isoToDatetimeLocal,
-} from "@/lib/class-availability";
-import { uploadClassVideo } from "@/lib/supabase/storage";
+  guessResourceKind,
+  uploadClassResource,
+  uploadClassVideo,
+} from "@/lib/supabase/storage";
+import { AvailabilityField } from "@/components/availability-field";
+import { AssessmentEditorModal } from "@/components/assessments/assessment-editor-modal";
+import { StatusPill } from "@/components/curriculum/status-pill";
 import type {
+  AssessmentRecord,
   ClassRecord,
   ClassResource,
-  ClassStatus,
   ClassVideo,
   ResourceKind,
 } from "@/lib/types";
@@ -43,14 +46,24 @@ export function ClassEditorModal({
   onClose: () => void;
 }) {
   const { updateClass } = useCurriculum();
+  const { getAssessmentsForClass, addAssessment, deleteAssessment } =
+    useAssessments();
   const [draft, setDraft] = useState<ClassRecord | null>(klass);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [videoUploadError, setVideoUploadError] = useState<string | null>(null);
+  const videoFileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingResource, setUploadingResource] = useState(false);
+  const [resourceUploadError, setResourceUploadError] = useState<
+    string | null
+  >(null);
+  const resourceFileInputRef = useRef<HTMLInputElement>(null);
+  const [editingAssessment, setEditingAssessment] =
+    useState<AssessmentRecord | null>(null);
 
   useEffect(() => {
     setDraft(klass);
-    setUploadError(null);
+    setVideoUploadError(null);
+    setResourceUploadError(null);
   }, [klass]);
 
   useEffect(() => {
@@ -134,13 +147,15 @@ export function ClassEditorModal({
     );
   }
 
-  async function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleVideoFileSelected(
+    e: React.ChangeEvent<HTMLInputElement>
+  ) {
     const file = e.target.files?.[0];
     e.target.value = ""; // allow re-selecting the same file later
     if (!file || !draft) return;
 
-    setUploading(true);
-    setUploadError(null);
+    setUploadingVideo(true);
+    setVideoUploadError(null);
     try {
       const url = await uploadClassVideo(file, draft.id);
       setDraft((d) =>
@@ -155,22 +170,49 @@ export function ClassEditorModal({
           : d
       );
     } catch (err) {
-      setUploadError(
+      setVideoUploadError(
         err instanceof Error ? err.message : "Upload failed. Please try again."
       );
     } finally {
-      setUploading(false);
+      setUploadingVideo(false);
     }
   }
 
-  function setAvailabilityMode(mode: ClassStatus) {
-    if (mode === "scheduled") {
-      patch({
-        status: "scheduled",
-        releaseAt: draft?.releaseAt ?? defaultScheduleIso(),
-      });
-    } else {
-      patch({ status: mode, releaseAt: null });
+  async function handleResourceFileSelected(
+    e: React.ChangeEvent<HTMLInputElement>
+  ) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-selecting the same file later
+    if (!file || !draft) return;
+
+    setUploadingResource(true);
+    setResourceUploadError(null);
+    try {
+      const url = await uploadClassResource(file, draft.id);
+      // Strip the extension for a cleaner default label (e.g. "Handbook.pdf" -> "Handbook").
+      const label = file.name.replace(/\.[^./]+$/, "");
+      setDraft((d) =>
+        d
+          ? {
+              ...d,
+              resources: [
+                ...d.resources,
+                {
+                  id: makeResourceId(),
+                  label,
+                  url,
+                  kind: guessResourceKind(file.name),
+                },
+              ],
+            }
+          : d
+      );
+    } catch (err) {
+      setResourceUploadError(
+        err instanceof Error ? err.message : "Upload failed. Please try again."
+      );
+    } finally {
+      setUploadingResource(false);
     }
   }
 
@@ -262,27 +304,11 @@ export function ClassEditorModal({
                       : "Or schedule it to unlock automatically at a set time."
                   }
                 >
-                  <select
-                    value={draft.status}
-                    onChange={(e) =>
-                      setAvailabilityMode(e.target.value as ClassStatus)
-                    }
-                    className="input"
-                  >
-                    <option value="released">Released now</option>
-                    <option value="locked">Locked</option>
-                    <option value="scheduled">Scheduled…</option>
-                  </select>
-                  {draft.status === "scheduled" && (
-                    <input
-                      type="datetime-local"
-                      value={isoToDatetimeLocal(draft.releaseAt)}
-                      onChange={(e) =>
-                        patch({ releaseAt: datetimeLocalToIso(e.target.value) })
-                      }
-                      className="input mt-2"
-                    />
-                  )}
+                  <AvailabilityField
+                    status={draft.status}
+                    releaseAt={draft.releaseAt}
+                    onChange={(next) => patch(next)}
+                  />
                 </Field>
 
                 <Field label="Notes" hint="Shown to fellows on the class page.">
@@ -322,27 +348,27 @@ export function ClassEditorModal({
                       </button>
                       <button
                         type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={uploading}
+                        onClick={() => videoFileInputRef.current?.click()}
+                        disabled={uploadingVideo}
                         className="inline-flex items-center gap-1 text-sm font-medium text-brand-navy hover:text-brand-orange disabled:opacity-50"
                       >
                         <Upload size={15} />
-                        {uploading ? "Uploading…" : "Upload"}
+                        {uploadingVideo ? "Uploading…" : "Upload"}
                       </button>
                     </div>
                   </div>
 
                   <input
-                    ref={fileInputRef}
+                    ref={videoFileInputRef}
                     type="file"
                     accept="video/*"
-                    onChange={handleFileSelected}
+                    onChange={handleVideoFileSelected}
                     className="hidden"
                   />
 
-                  {uploadError && (
+                  {videoUploadError && (
                     <p className="mb-2 rounded-md bg-red-50 px-2.5 py-1.5 text-xs text-red-700">
-                      {uploadError}
+                      {videoUploadError}
                     </p>
                   )}
 
@@ -394,19 +420,46 @@ export function ClassEditorModal({
                     <span className="text-sm font-medium text-slate-700">
                       Resources
                     </span>
-                    <button
-                      type="button"
-                      onClick={addResource}
-                      className="inline-flex items-center gap-1 text-sm font-medium text-brand-navy hover:text-brand-orange"
-                    >
-                      <Plus size={15} />
-                      Add
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={addResource}
+                        className="inline-flex items-center gap-1 text-sm font-medium text-brand-navy hover:text-brand-orange"
+                      >
+                        <Plus size={15} />
+                        Add URL
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => resourceFileInputRef.current?.click()}
+                        disabled={uploadingResource}
+                        className="inline-flex items-center gap-1 text-sm font-medium text-brand-navy hover:text-brand-orange disabled:opacity-50"
+                      >
+                        <Upload size={15} />
+                        {uploadingResource ? "Uploading…" : "Upload"}
+                      </button>
+                    </div>
                   </div>
+
+                  <input
+                    ref={resourceFileInputRef}
+                    type="file"
+                    onChange={handleResourceFileSelected}
+                    className="hidden"
+                  />
+
+                  {resourceUploadError && (
+                    <p className="mb-2 rounded-md bg-red-50 px-2.5 py-1.5 text-xs text-red-700">
+                      {resourceUploadError}
+                    </p>
+                  )}
 
                   <div className="space-y-2">
                     {draft.resources.length === 0 && (
-                      <p className="text-sm text-slate-400">No resources yet.</p>
+                      <p className="text-sm text-slate-400">
+                        No resources yet. Upload a file (requires Supabase) or
+                        add a URL.
+                      </p>
                     )}
                     {draft.resources.map((r) => (
                       <div
@@ -458,6 +511,65 @@ export function ClassEditorModal({
                     ))}
                   </div>
                 </div>
+
+                <div>
+                  <div className="mb-1.5 flex items-center justify-between">
+                    <span className="text-sm font-medium text-slate-700">
+                      Assessments
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setEditingAssessment(addAssessment(draft.id))}
+                      className="inline-flex items-center gap-1 text-sm font-medium text-brand-navy hover:text-brand-orange"
+                    >
+                      <Plus size={15} />
+                      Add assessment
+                    </button>
+                  </div>
+
+                  <div className="space-y-2">
+                    {getAssessmentsForClass(draft.id).length === 0 && (
+                      <p className="text-sm text-slate-400">
+                        No assessments yet for this class.
+                      </p>
+                    )}
+                    {getAssessmentsForClass(draft.id).map((a) => (
+                      <div
+                        key={a.id}
+                        className="flex items-center gap-2 rounded-lg border border-slate-200 p-2.5"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="truncate text-sm font-medium text-slate-800">
+                              {a.title}
+                            </span>
+                            <StatusPill item={a} />
+                          </div>
+                          <p className="mt-0.5 text-xs text-slate-400">
+                            {a.questionIds.length} question
+                            {a.questionIds.length === 1 ? "" : "s"}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setEditingAssessment(a)}
+                          aria-label={`Edit ${a.title}`}
+                          className="flex size-8 shrink-0 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteAssessment(a.id)}
+                          aria-label={`Delete ${a.title}`}
+                          className="flex size-8 shrink-0 items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-600"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -480,6 +592,11 @@ export function ClassEditorModal({
           </div>
         </div>
       </div>
+
+      <AssessmentEditorModal
+        assessment={editingAssessment}
+        onClose={() => setEditingAssessment(null)}
+      />
     </div>
   );
 }

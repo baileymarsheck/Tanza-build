@@ -1,32 +1,37 @@
-import type { ClassRecord } from "@/lib/types";
+import type { AvailabilityStatus } from "@/lib/types";
 
-// Whether a class is effectively visible to fellows right now: manually
+// Shared shape for anything with the locked/released/scheduled lifecycle —
+// classes and assessments both satisfy this structurally, no inheritance
+// needed.
+interface Availability {
+  status: AvailabilityStatus;
+  releaseAt?: string | null;
+}
+
+// Whether an item is effectively visible to fellows right now: manually
 // released, or scheduled with the release time already passed.
 //
-// Note: this is evaluated at render time, so a scheduled class flips to
+// Note: this is evaluated at render time, so a scheduled item flips to
 // released on the next load/interaction after its time — not live on an open
 // page. Day-granularity release dates make that gap immaterial in practice.
-export function isClassReleased(
-  klass: Pick<ClassRecord, "status" | "releaseAt">,
-  now: Date = new Date()
-): boolean {
-  if (klass.status === "released") return true;
-  if (klass.status === "scheduled" && klass.releaseAt) {
-    return new Date(klass.releaseAt).getTime() <= now.getTime();
+export function isReleased(item: Availability, now: Date = new Date()): boolean {
+  if (item.status === "released") return true;
+  if (item.status === "scheduled" && item.releaseAt) {
+    return new Date(item.releaseAt).getTime() <= now.getTime();
   }
   return false;
 }
 
 // Scheduled but the release time is still in the future (i.e. currently locked
 // but with a known unlock date to surface in the UI).
-export function isClassScheduledPending(
-  klass: Pick<ClassRecord, "status" | "releaseAt">,
+export function isScheduledPending(
+  item: Availability,
   now: Date = new Date()
 ): boolean {
   return (
-    klass.status === "scheduled" &&
-    !!klass.releaseAt &&
-    new Date(klass.releaseAt).getTime() > now.getTime()
+    item.status === "scheduled" &&
+    !!item.releaseAt &&
+    new Date(item.releaseAt).getTime() > now.getTime()
   );
 }
 
@@ -64,7 +69,7 @@ export function datetimeLocalToIso(value: string): string | null {
   return Number.isNaN(d.getTime()) ? null : d.toISOString();
 }
 
-// Sensible default when an admin first schedules a class: a week out at 09:00.
+// Sensible default when an admin first schedules something: a week out at 09:00.
 export function defaultScheduleIso(): string {
   const d = new Date();
   d.setDate(d.getDate() + 7);

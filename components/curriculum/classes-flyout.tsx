@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { useCurriculum } from "@/lib/curriculum";
-import { isClassReleased } from "@/lib/class-availability";
+import { isReleased } from "@/lib/availability";
 
 // Content for the "My Classes" nav flyout: lists the currently released
 // classes (the ones a fellow can actually open), grouped by module. Locked
@@ -14,7 +14,7 @@ export function ClassesFlyout({ onNavigate }: { onNavigate: () => void }) {
   const releasedByModule = modules
     .map((module) => ({
       module,
-      classes: module.classes.filter((c) => isClassReleased(c)),
+      classes: module.classes.filter((c) => isReleased(c)),
     }))
     .filter((group) => group.classes.length > 0);
 

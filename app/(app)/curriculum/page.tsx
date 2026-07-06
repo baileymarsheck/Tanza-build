@@ -1,22 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarClock, Pencil, Plus, RotateCcw } from "lucide-react";
+import { Pencil, Plus, RotateCcw } from "lucide-react";
 import { useCurrentProfile } from "@/lib/current-profile";
 import { useCurriculum } from "@/lib/curriculum";
 import {
-  datetimeLocalToIso,
   defaultScheduleIso,
   formatReleaseDate,
-  formatReleaseDateTime,
-  isClassReleased,
-  isClassScheduledPending,
-  isoToDatetimeLocal,
-} from "@/lib/class-availability";
+  isReleased,
+  isScheduledPending,
+} from "@/lib/availability";
 import type { ClassRecord } from "@/lib/types";
 import { StatusPill } from "@/components/curriculum/status-pill";
 import { ClassEditorModal } from "@/components/curriculum/class-editor-modal";
-import { ConfirmDialog } from "@/components/confirm-dialog";
+import { AvailabilityRow } from "@/components/availability-row";
 
 export default function CurriculumPage() {
   const { profile } = useCurrentProfile();
@@ -57,7 +54,7 @@ export default function CurriculumPage() {
         {modules.map((module) => {
           // Not-yet-launched classes that have a scheduled go-live date.
           const upcoming = module.classes.flatMap((c) =>
-            isClassScheduledPending(c) && c.releaseAt
+            isScheduledPending(c) && c.releaseAt
               ? [`${c.title} launches ${formatReleaseDate(c.releaseAt)}`]
               : []
           );
@@ -73,7 +70,7 @@ export default function CurriculumPage() {
                   {module.title}
                 </h3>
                 <span className="text-xs text-slate-400">
-                  {module.classes.filter((c) => isClassReleased(c)).length} /{" "}
+                  {module.classes.filter((c) => isReleased(c)).length} /{" "}
                   {module.classes.length} released
                 </span>
               </div>
@@ -129,7 +126,7 @@ export default function CurriculumPage() {
 }
 
 // A class row in the admin manager: status, quick release toggle, and inline
-// scheduling (set/clear a go-live date and edit it without opening the drawer).
+// scheduling (set/clear a go-live date and edit it without opening the modal).
 function AdminClassRow({
   klass,
   onEdit,
@@ -138,41 +135,16 @@ function AdminClassRow({
   onEdit: () => void;
 }) {
   const { toggleClassStatus, updateClass } = useCurriculum();
-  const released = isClassReleased(klass);
-  const scheduledPending = isClassScheduledPending(klass);
-  const [confirmUnrelease, setConfirmUnrelease] = useState(false);
-  const [editingDate, setEditingDate] = useState(false);
-
-  function startSchedule() {
-    updateClass(klass.id, {
-      status: "scheduled",
-      releaseAt: klass.releaseAt ?? defaultScheduleIso(),
-    });
-  }
-
-  function cancelSchedule() {
-    updateClass(klass.id, { status: "locked", releaseAt: null });
-  }
-
-  // Releasing is one click; un-releasing a live class asks first, since it
-  // pulls the class out from under fellows who may already be in it.
-  function handleToggle() {
-    if (released) {
-      setConfirmUnrelease(true);
-    } else {
-      toggleClassStatus(klass.id);
-    }
-  }
 
   return (
     <li className="px-5 py-3">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="truncate font-medium text-slate-900">
               {klass.title}
             </span>
-            <StatusPill klass={klass} />
+            <StatusPill item={klass} />
           </div>
           {klass.summary && (
             <p className="mt-0.5 truncate text-sm text-slate-500">
@@ -181,124 +153,32 @@ function AdminClassRow({
           )}
         </div>
 
-        <div className="flex shrink-0 items-center gap-2">
-          <button
-            type="button"
-            onClick={onEdit}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
-          >
-            <Pencil size={14} />
-            Edit
-          </button>
-          <button
-            type="button"
-            onClick={scheduledPending ? cancelSchedule : startSchedule}
-            disabled={released}
-            aria-pressed={scheduledPending}
-            title={
-              released
-                ? "Already released — unrelease it first to schedule"
-                : scheduledPending
-                  ? "Cancel scheduled release"
-                  : "Schedule release"
-            }
-            className={`flex size-8 items-center justify-center rounded-lg border transition-colors ${
-              released
-                ? "cursor-not-allowed border-slate-200 bg-slate-50 text-slate-300"
-                : scheduledPending
-                  ? "border-amber-300 bg-amber-50 text-amber-600"
-                  : "border-slate-300 text-slate-500 hover:bg-slate-100"
-            }`}
-          >
-            <CalendarClock size={15} />
-          </button>
-          <ReleaseToggle released={released} onToggle={handleToggle} />
-        </div>
+        <button
+          type="button"
+          onClick={onEdit}
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
+        >
+          <Pencil size={14} />
+          Edit
+        </button>
+
+        <AvailabilityRow
+          status={klass.status}
+          releaseAt={klass.releaseAt}
+          itemLabel={klass.title}
+          onSchedule={() =>
+            updateClass(klass.id, {
+              status: "scheduled",
+              releaseAt: klass.releaseAt ?? defaultScheduleIso(),
+            })
+          }
+          onUnschedule={() =>
+            updateClass(klass.id, { status: "locked", releaseAt: null })
+          }
+          onChangeReleaseAt={(iso) => updateClass(klass.id, { releaseAt: iso })}
+          onToggleRelease={() => toggleClassStatus(klass.id)}
+        />
       </div>
-
-      {scheduledPending && klass.releaseAt && (
-        <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg bg-amber-50/60 px-3 py-2 text-sm">
-          <CalendarClock size={15} className="shrink-0 text-amber-600" />
-          {editingDate ? (
-            <input
-              type="datetime-local"
-              autoFocus
-              value={isoToDatetimeLocal(klass.releaseAt)}
-              onChange={(e) =>
-                updateClass(klass.id, {
-                  releaseAt: datetimeLocalToIso(e.target.value),
-                })
-              }
-              onBlur={() => setEditingDate(false)}
-              className="rounded-md border border-amber-200 bg-white px-2 py-1 text-sm text-slate-800 focus:border-brand-orange focus:outline-none"
-            />
-          ) : (
-            <>
-              <span className="font-medium text-amber-800">
-                Releases {formatReleaseDateTime(klass.releaseAt)}
-              </span>
-              <button
-                type="button"
-                onClick={() => setEditingDate(true)}
-                className="text-xs font-medium text-brand-navy hover:text-brand-orange"
-              >
-                Change
-              </button>
-            </>
-          )}
-          <button
-            type="button"
-            onClick={cancelSchedule}
-            className="ml-auto text-xs font-medium text-amber-600 hover:text-amber-800"
-          >
-            Unschedule
-          </button>
-        </div>
-      )}
-
-      <ConfirmDialog
-        open={confirmUnrelease}
-        title="Unrelease this class?"
-        message={`"${klass.title}" is currently visible to fellows. Unreleasing it will hide it from them — including anyone already working through it.`}
-        confirmLabel="Unrelease"
-        destructive
-        onConfirm={() => {
-          toggleClassStatus(klass.id);
-          setConfirmUnrelease(false);
-        }}
-        onCancel={() => setConfirmUnrelease(false)}
-      />
     </li>
-  );
-}
-
-// Accessible switch for releasing / locking a class.
-function ReleaseToggle({
-  released,
-  onToggle,
-}: {
-  released: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={released}
-      onClick={onToggle}
-      title={released ? "Lock (hide from fellows)" : "Release to fellows"}
-      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
-        released ? "bg-emerald-500" : "bg-slate-300"
-      }`}
-    >
-      <span className="sr-only">
-        {released ? "Locked" : "Released"} — toggle
-      </span>
-      <span
-        className={`inline-block size-5 transform rounded-full bg-white shadow transition-transform ${
-          released ? "translate-x-5" : "translate-x-0.5"
-        }`}
-      />
-    </button>
   );
 }

@@ -5,9 +5,9 @@ import { CalendarClock, ChevronRight, Lock } from "lucide-react";
 import { useCurriculum } from "@/lib/curriculum";
 import {
   formatReleaseDate,
-  isClassReleased,
-  isClassScheduledPending,
-} from "@/lib/class-availability";
+  isReleased,
+  isScheduledPending,
+} from "@/lib/availability";
 import type { ClassRecord } from "@/lib/types";
 
 export default function ClassesPage() {
@@ -24,7 +24,7 @@ export default function ClassesPage() {
       <div className="mt-6 space-y-5">
         {modules.map((module) => {
           const releasedCount = module.classes.filter((c) =>
-            isClassReleased(c)
+            isReleased(c)
           ).length;
           return (
             <section
@@ -61,8 +61,8 @@ export default function ClassesPage() {
 }
 
 function ClassRow({ klass }: { klass: ClassRecord }) {
-  if (!isClassReleased(klass)) {
-    const scheduledPending = isClassScheduledPending(klass);
+  if (!isReleased(klass)) {
+    const scheduledPending = isScheduledPending(klass);
     return (
       <li className="flex items-center gap-3 px-5 py-3.5">
         {scheduledPending ? (

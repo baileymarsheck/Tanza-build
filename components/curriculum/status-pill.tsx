@@ -1,19 +1,20 @@
 import { CalendarClock, Lock, Unlock } from "lucide-react";
 import {
   formatReleaseDate,
-  isClassReleased,
-  isClassScheduledPending,
-} from "@/lib/class-availability";
-import type { ClassRecord } from "@/lib/types";
+  isReleased,
+  isScheduledPending,
+} from "@/lib/availability";
+import type { AvailabilityStatus } from "@/lib/types";
 
-// Shared between the admin manager and the fellow browser so availability
-// always reads the same way: released, scheduled (with date), or locked.
+// Shared between classes and assessments (admin manager + fellow browser) so
+// availability always reads the same way: released, scheduled (with date),
+// or locked.
 export function StatusPill({
-  klass,
+  item,
 }: {
-  klass: Pick<ClassRecord, "status" | "releaseAt">;
+  item: { status: AvailabilityStatus; releaseAt?: string | null };
 }) {
-  if (isClassReleased(klass)) {
+  if (isReleased(item)) {
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
         <Unlock size={12} />
@@ -22,11 +23,11 @@ export function StatusPill({
     );
   }
 
-  if (isClassScheduledPending(klass) && klass.releaseAt) {
+  if (isScheduledPending(item) && item.releaseAt) {
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
         <CalendarClock size={12} />
-        Unlocks {formatReleaseDate(klass.releaseAt)}
+        Unlocks {formatReleaseDate(item.releaseAt)}
       </span>
     );
   }
