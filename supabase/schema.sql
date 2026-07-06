@@ -104,6 +104,39 @@ drop policy if exists "Class resources are readable by anyone" on class_resource
 create policy "Class resources are readable by anyone"
   on class_resources for select using (true);
 
+-- Writes: open for now (no real Supabase Auth yet, so no auth.uid() to
+-- scope an admin check against) — tighten to an admin-only check once
+-- Auth lands, same tradeoff as every other table below.
+drop policy if exists "Modules are writable by anyone" on modules;
+create policy "Modules are writable by anyone"
+  on modules for insert with check (true);
+drop policy if exists "Modules are updatable by anyone" on modules;
+create policy "Modules are updatable by anyone"
+  on modules for update using (true) with check (true);
+drop policy if exists "Modules are deletable by anyone" on modules;
+create policy "Modules are deletable by anyone"
+  on modules for delete using (true);
+
+drop policy if exists "Classes are writable by anyone" on classes;
+create policy "Classes are writable by anyone"
+  on classes for insert with check (true);
+drop policy if exists "Classes are updatable by anyone" on classes;
+create policy "Classes are updatable by anyone"
+  on classes for update using (true) with check (true);
+drop policy if exists "Classes are deletable by anyone" on classes;
+create policy "Classes are deletable by anyone"
+  on classes for delete using (true);
+
+drop policy if exists "Class resources are writable by anyone" on class_resources;
+create policy "Class resources are writable by anyone"
+  on class_resources for insert with check (true);
+drop policy if exists "Class resources are updatable by anyone" on class_resources;
+create policy "Class resources are updatable by anyone"
+  on class_resources for update using (true) with check (true);
+drop policy if exists "Class resources are deletable by anyone" on class_resources;
+create policy "Class resources are deletable by anyone"
+  on class_resources for delete using (true);
+
 
 -- --------------------------------------------------------------------------
 -- Class videos
@@ -133,6 +166,16 @@ alter table class_videos enable row level security;
 drop policy if exists "Class videos are readable by anyone" on class_videos;
 create policy "Class videos are readable by anyone"
   on class_videos for select using (true);
+
+drop policy if exists "Class videos are writable by anyone" on class_videos;
+create policy "Class videos are writable by anyone"
+  on class_videos for insert with check (true);
+drop policy if exists "Class videos are updatable by anyone" on class_videos;
+create policy "Class videos are updatable by anyone"
+  on class_videos for update using (true) with check (true);
+drop policy if exists "Class videos are deletable by anyone" on class_videos;
+create policy "Class videos are deletable by anyone"
+  on class_videos for delete using (true);
 
 
 -- --------------------------------------------------------------------------
@@ -261,6 +304,48 @@ drop policy if exists "Assessment questions are readable by anyone" on assessmen
 create policy "Assessment questions are readable by anyone"
   on assessment_questions for select using (true);
 
+-- Writes: open for now, same no-Auth-yet tradeoff as the curriculum tables
+-- above — tighten to an admin-only check once Supabase Auth lands.
+drop policy if exists "Questions are writable by anyone" on questions;
+create policy "Questions are writable by anyone"
+  on questions for insert with check (true);
+drop policy if exists "Questions are updatable by anyone" on questions;
+create policy "Questions are updatable by anyone"
+  on questions for update using (true) with check (true);
+drop policy if exists "Questions are deletable by anyone" on questions;
+create policy "Questions are deletable by anyone"
+  on questions for delete using (true);
+
+drop policy if exists "Question options are writable by anyone" on question_options;
+create policy "Question options are writable by anyone"
+  on question_options for insert with check (true);
+drop policy if exists "Question options are updatable by anyone" on question_options;
+create policy "Question options are updatable by anyone"
+  on question_options for update using (true) with check (true);
+drop policy if exists "Question options are deletable by anyone" on question_options;
+create policy "Question options are deletable by anyone"
+  on question_options for delete using (true);
+
+drop policy if exists "Assessments are writable by anyone" on assessments;
+create policy "Assessments are writable by anyone"
+  on assessments for insert with check (true);
+drop policy if exists "Assessments are updatable by anyone" on assessments;
+create policy "Assessments are updatable by anyone"
+  on assessments for update using (true) with check (true);
+drop policy if exists "Assessments are deletable by anyone" on assessments;
+create policy "Assessments are deletable by anyone"
+  on assessments for delete using (true);
+
+drop policy if exists "Assessment questions are writable by anyone" on assessment_questions;
+create policy "Assessment questions are writable by anyone"
+  on assessment_questions for insert with check (true);
+drop policy if exists "Assessment questions are updatable by anyone" on assessment_questions;
+create policy "Assessment questions are updatable by anyone"
+  on assessment_questions for update using (true) with check (true);
+drop policy if exists "Assessment questions are deletable by anyone" on assessment_questions;
+create policy "Assessment questions are deletable by anyone"
+  on assessment_questions for delete using (true);
+
 -- NOTE: attempts/answers hold real fellow submission content, unlike the
 -- open-read curriculum tables above. An open select policy matches this
 -- file's existing scaffold-stage precedent (no real Supabase Auth is wired
@@ -278,6 +363,30 @@ create policy "Assessment attempts are readable by anyone"
 drop policy if exists "Attempt answers are readable by anyone" on attempt_answers;
 create policy "Attempt answers are readable by anyone"
   on attempt_answers for select using (true);
+
+-- Writes: open for now, same tradeoff as the select policy above (and the
+-- rest of this file) — tighten once Supabase Auth lands, in particular
+-- scoping insert to `fellow_id = auth.uid()` so a fellow can only submit
+-- their own attempt.
+drop policy if exists "Assessment attempts are writable by anyone" on assessment_attempts;
+create policy "Assessment attempts are writable by anyone"
+  on assessment_attempts for insert with check (true);
+drop policy if exists "Assessment attempts are updatable by anyone" on assessment_attempts;
+create policy "Assessment attempts are updatable by anyone"
+  on assessment_attempts for update using (true) with check (true);
+drop policy if exists "Assessment attempts are deletable by anyone" on assessment_attempts;
+create policy "Assessment attempts are deletable by anyone"
+  on assessment_attempts for delete using (true);
+
+drop policy if exists "Attempt answers are writable by anyone" on attempt_answers;
+create policy "Attempt answers are writable by anyone"
+  on attempt_answers for insert with check (true);
+drop policy if exists "Attempt answers are updatable by anyone" on attempt_answers;
+create policy "Attempt answers are updatable by anyone"
+  on attempt_answers for update using (true) with check (true);
+drop policy if exists "Attempt answers are deletable by anyone" on attempt_answers;
+create policy "Attempt answers are deletable by anyone"
+  on attempt_answers for delete using (true);
 
 
 -- --------------------------------------------------------------------------
