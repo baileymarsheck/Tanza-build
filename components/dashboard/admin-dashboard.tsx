@@ -1,11 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowRight,
+  CheckCircle2,
+  ClipboardCheck,
+  PlayCircle,
+  Users,
+} from "lucide-react";
 import { useCurriculum } from "@/lib/curriculum";
 import { useAssessments } from "@/lib/assessments";
 import { useCurrentProfile } from "@/lib/current-profile";
 import { isReleased } from "@/lib/availability";
+import { getTimeOfDayGreeting } from "@/lib/greeting";
+import { DashboardHero } from "@/components/dashboard/dashboard-hero";
 import { StatTile } from "@/components/dashboard/stat-tile";
 
 export function AdminDashboard() {
@@ -25,39 +34,56 @@ export function AdminDashboard() {
 
   return (
     <div className="max-w-3xl">
-      <h2 className="text-xl font-semibold text-brand-navy">
-        Welcome, {profile.name.split(" ")[0]}
-      </h2>
-      <p className="mt-1 text-sm text-slate-600">Here's where things stand.</p>
-
-      <div className="mt-6 grid grid-cols-3 gap-4">
-        <StatTile label="Fellows" value={String(fellowCount)} />
+      <DashboardHero
+        greeting={`${getTimeOfDayGreeting()}, ${profile.name.split(" ")[0]}`}
+        subtitle="Here's where things stand."
+      >
+        <StatTile label="Fellows" value={String(fellowCount)} icon={Users} />
         <StatTile
           label="Classes released"
           value={`${releasedClasses} / ${allClasses.length}`}
+          icon={PlayCircle}
+          progress={
+            allClasses.length === 0
+              ? 0
+              : (releasedClasses / allClasses.length) * 100
+          }
         />
         <StatTile
           label="Assessments released"
           value={`${releasedAssessments} / ${allAssessments.length}`}
+          icon={ClipboardCheck}
+          progress={
+            allAssessments.length === 0
+              ? 0
+              : (releasedAssessments / allAssessments.length) * 100
+          }
         />
-      </div>
+      </DashboardHero>
 
-      <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
+      <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         {ungradedCount === 0 ? (
           <div className="flex items-center gap-3">
-            <CheckCircle2 size={20} className="shrink-0 text-emerald-500" />
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-emerald-50">
+              <CheckCircle2 size={18} className="text-emerald-600" />
+            </div>
             <p className="text-sm text-slate-600">
               All caught up — nothing waiting for review.
             </p>
           </div>
         ) : (
           <div className="flex items-center justify-between gap-4">
-            <div>
-              <h3 className="font-semibold text-brand-navy">Needs attention</h3>
-              <p className="mt-1 text-sm text-slate-600">
-                {ungradedCount} submission{ungradedCount === 1 ? "" : "s"} waiting
-                for review.
-              </p>
+            <div className="flex items-center gap-3">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-amber-50">
+                <AlertCircle size={18} className="text-amber-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-brand-navy">Needs attention</h3>
+                <p className="mt-1 text-sm text-slate-600">
+                  {ungradedCount} submission{ungradedCount === 1 ? "" : "s"} waiting
+                  for review.
+                </p>
+              </div>
             </div>
             <Link
               href="/submissions"

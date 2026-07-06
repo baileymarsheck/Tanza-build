@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Clock, ListTodo, MessageSquare, Trophy } from "lucide-react";
 import { useCurriculum } from "@/lib/curriculum";
 import { useAssessments } from "@/lib/assessments";
 import { useCurrentProfile } from "@/lib/current-profile";
 import { isReleased } from "@/lib/availability";
+import { getTimeOfDayGreeting } from "@/lib/greeting";
+import { DashboardHero } from "@/components/dashboard/dashboard-hero";
 import { StatTile } from "@/components/dashboard/stat-tile";
 import type { AssessmentAttempt, AssessmentRecord, ClassRecord } from "@/lib/types";
 
@@ -63,22 +65,28 @@ export function FellowDashboard() {
 
   return (
     <div className="max-w-3xl">
-      <h2 className="text-xl font-semibold text-brand-navy">
-        Welcome, {profile.name.split(" ")[0]}
-      </h2>
-      <p className="mt-1 text-sm text-slate-600">Here's where things stand.</p>
-
-      <div className="mt-6 grid grid-cols-3 gap-4">
-        <StatTile label="To do" value={String(notStarted.length)} />
-        <StatTile label="Pending review" value={String(pendingReview.length)} />
+      <DashboardHero
+        greeting={`${getTimeOfDayGreeting()}, ${profile.name.split(" ")[0]}`}
+        subtitle="Here's where things stand."
+      >
+        <StatTile label="To do" value={String(notStarted.length)} icon={ListTodo} />
+        <StatTile
+          label="Pending review"
+          value={String(pendingReview.length)}
+          icon={Clock}
+        />
         <StatTile
           label="Score so far"
           value={gradedAttempts.length === 0 ? "—" : `${scoreEarned} / ${scorePossible}`}
+          icon={Trophy}
         />
-      </div>
+      </DashboardHero>
 
-      <section className="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white">
-        <header className="border-b border-slate-200 bg-slate-50 px-5 py-3.5">
+      <section className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <header className="flex items-center gap-2.5 border-b border-slate-200 bg-slate-50 px-5 py-3.5">
+          <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-slate-100">
+            <ListTodo size={14} className="text-slate-600" />
+          </div>
           <h3 className="font-semibold text-brand-navy">To do</h3>
         </header>
         {notStarted.length === 0 ? (
@@ -120,8 +128,11 @@ export function FellowDashboard() {
       </section>
 
       {recentFeedback.length > 0 && (
-        <section className="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white">
-          <header className="border-b border-slate-200 bg-slate-50 px-5 py-3.5">
+        <section className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <header className="flex items-center gap-2.5 border-b border-slate-200 bg-slate-50 px-5 py-3.5">
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-emerald-50">
+              <MessageSquare size={14} className="text-emerald-600" />
+            </div>
             <h3 className="font-semibold text-brand-navy">Recent feedback</h3>
           </header>
           <ul className="divide-y divide-slate-100">
