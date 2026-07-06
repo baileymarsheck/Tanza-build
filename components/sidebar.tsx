@@ -88,14 +88,16 @@ export function Sidebar() {
     <div ref={containerRef} className="flex h-full">
       <aside className="flex h-full w-64 shrink-0 flex-col bg-brand-navy text-white">
         <div className="border-b border-white/10 bg-white px-4 py-4">
-          <Image
-            src="/tanza-logo.png"
-            alt="Tanza Partners"
-            width={490}
-            height={194}
-            priority
-            className="h-8 w-auto"
-          />
+          <Link href="/dashboard" className="block w-fit">
+            <Image
+              src="/tanza-logo.png"
+              alt="Tanza Partners"
+              width={490}
+              height={194}
+              priority
+              className="h-8 w-auto"
+            />
+          </Link>
         </div>
         <div className="border-b border-white/10 px-4 py-2.5">
           <span className="text-[11px] font-medium uppercase tracking-[0.2em] text-brand-orange">
