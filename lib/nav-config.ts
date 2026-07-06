@@ -88,7 +88,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     id: "competencies",
-    label: "Competencies & Config",
+    label: "Configurations",
     href: "/competencies",
     icon: Settings,
     roles: ["admin"],
