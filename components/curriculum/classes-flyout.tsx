@@ -47,7 +47,7 @@ export function ClassesFlyout({ onNavigate }: { onNavigate: () => void }) {
                     <Link
                       href={`/classes/${klass.id}`}
                       onClick={onNavigate}
-                      className="-mx-2 block rounded-md px-2 py-1.5 text-sm text-slate-700 transition-colors hover:bg-slate-100 hover:text-brand-navy"
+                      className="-mx-2 block rounded-md px-2 py-2 text-base text-slate-700 transition-colors hover:bg-slate-100 hover:text-brand-navy"
                     >
                       {klass.title}
                     </Link>

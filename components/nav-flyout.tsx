@@ -70,7 +70,7 @@ export function NavFlyout({
               <Link
                 href={item.href}
                 onClick={onClose}
-                className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-brand-navy hover:text-brand-orange"
+                className="mt-5 inline-flex items-center gap-1.5 text-base font-medium text-brand-navy hover:text-brand-orange"
               >
                 Open {item.label}
                 <ArrowRight size={15} />

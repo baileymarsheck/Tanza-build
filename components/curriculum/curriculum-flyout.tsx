@@ -20,7 +20,7 @@ export function CurriculumFlyout({
           <Link
             href="/curriculum"
             onClick={onNavigate}
-            className="-mx-2 block rounded-md px-2 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-brand-navy"
+            className="-mx-2 block rounded-md px-2 py-2 text-base font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-brand-navy"
           >
             Overview
           </Link>
@@ -29,7 +29,7 @@ export function CurriculumFlyout({
           <button
             type="button"
             onClick={onCreateClass}
-            className="-mx-2 block w-[calc(100%+1rem)] rounded-md px-2 py-1.5 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-brand-navy"
+            className="-mx-2 block w-[calc(100%+1rem)] rounded-md px-2 py-2 text-left text-base font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-brand-navy"
           >
             Create Class
           </button>
