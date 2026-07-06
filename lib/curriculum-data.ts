@@ -1,7 +1,7 @@
 import type { ModuleWithClasses } from "@/lib/types";
 
 // Bump this when the seed shape changes so stale localStorage is discarded.
-export const CURRICULUM_STORAGE_KEY = "tanza:curriculum:v2";
+export const CURRICULUM_STORAGE_KEY = "tanza:curriculum:v3";
 
 // Seed curriculum mirroring the five Phase 1 modules from the Fellowship
 // outline. Foundations is released so fellows have something to work through;
@@ -161,7 +161,8 @@ export const SEED_CURRICULUM: ModuleWithClasses[] = [
         moduleId: "mod-data",
         title: "Critical Paths & Risks",
         summary: "Sequencing the work and surfacing risks before they bite.",
-        status: "locked",
+        status: "scheduled",
+        releaseAt: "2026-07-06T09:00:00.000Z",
         notes: "",
         transcript: "",
         resources: [],
@@ -171,7 +172,8 @@ export const SEED_CURRICULUM: ModuleWithClasses[] = [
         moduleId: "mod-data",
         title: "Data Habits & Routines",
         summary: "Turning data review into a weekly team habit.",
-        status: "locked",
+        status: "scheduled",
+        releaseAt: "2026-07-13T09:00:00.000Z",
         notes: "",
         transcript: "",
         resources: [],
@@ -181,7 +183,8 @@ export const SEED_CURRICULUM: ModuleWithClasses[] = [
         moduleId: "mod-data",
         title: "Learning Loops",
         summary: "Closing the loop from insight to action to re-measurement.",
-        status: "locked",
+        status: "scheduled",
+        releaseAt: "2026-07-20T09:00:00.000Z",
         notes: "",
         transcript: "",
         resources: [],
@@ -199,7 +202,8 @@ export const SEED_CURRICULUM: ModuleWithClasses[] = [
         moduleId: "mod-team",
         title: "High-Performing Teams",
         summary: "What separates teams that deliver from teams that drift.",
-        status: "locked",
+        status: "scheduled",
+        releaseAt: "2026-08-03T09:00:00.000Z",
         notes: "",
         transcript: "",
         resources: [],
@@ -209,7 +213,8 @@ export const SEED_CURRICULUM: ModuleWithClasses[] = [
         moduleId: "mod-team",
         title: "Leading with 3Cs",
         summary: "Clarity, consistency, and care as a leadership operating system.",
-        status: "locked",
+        status: "scheduled",
+        releaseAt: "2026-08-10T09:00:00.000Z",
         notes: "",
         transcript: "",
         resources: [],

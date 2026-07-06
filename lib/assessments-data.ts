@@ -1,7 +1,7 @@
 import type { AssessmentAttempt, AssessmentRecord, Question } from "@/lib/types";
 
 // Bump this when the seed shape changes so stale localStorage is discarded.
-export const ASSESSMENTS_STORAGE_KEY = "tanza:assessments:v2";
+export const ASSESSMENTS_STORAGE_KEY = "tanza:assessments:v3";
 
 // A question bank spanning several modules, plus a handful of assessments in
 // different states (released / locked / scheduled) so the feature is fully
@@ -101,6 +101,17 @@ export const SEED_QUESTIONS: Question[] = [
     aptitudeWeights: { strategic: 60, technical: 40 },
     tags: ["program-1", "theory-of-change"],
     createdAt: "2026-01-06T09:00:00.000Z",
+  },
+  {
+    id: "q-onboarding-reflection",
+    type: "short-answer",
+    prompt:
+      "In 2-3 sentences, describe one adjustment you'd make to your first week's plan after seeing how Program 1 and the franchise model fit together.",
+    options: [],
+    points: 3,
+    aptitudeWeights: { strategic: 60, leadership: 40 },
+    tags: ["program-1", "franchise-model"],
+    createdAt: "2026-01-06T09:07:00.000Z",
   },
   {
     id: "q-franchise-purpose",
@@ -260,7 +271,11 @@ export const SEED_ASSESSMENTS: AssessmentRecord[] = [
     title: "Onboarding Fundamentals Quiz",
     description: "Checking the basics of the program model and the franchise.",
     status: "released",
-    questionIds: ["q-outcomes-vs-activities", "q-franchise-purpose"],
+    questionIds: [
+      "q-outcomes-vs-activities",
+      "q-franchise-purpose",
+      "q-onboarding-reflection",
+    ],
     createdAt: "2026-01-06T09:15:00.000Z",
   },
   {
@@ -288,4 +303,140 @@ export const SEED_ASSESSMENTS: AssessmentRecord[] = [
   },
 ];
 
-export const SEED_ATTEMPTS: AssessmentAttempt[] = [];
+// Fixed fellow ids, matching lib/current-profile.tsx's fallback profiles and
+// supabase/schema.sql's seeded rows.
+const AMINA_ID = "00000000-0000-0000-0000-000000000002";
+const DAVID_ID = "00000000-0000-0000-0000-000000000003";
+
+// Both fellows have already completed and been graded on their first
+// assessment (Performance Diagnosis Check), with different answers and
+// individualized admin feedback. Amina has also submitted a second
+// assessment (Onboarding Fundamentals Quiz) that's still awaiting review —
+// David hasn't touched a second one yet — so the "pending review" and
+// "needs attention" states are visible out of the box on both dashboards.
+export const SEED_ATTEMPTS: AssessmentAttempt[] = [
+  {
+    id: "att-amina-performance-diagnosis",
+    assessmentId: "as-performance-diagnosis-check",
+    classId: "cls-performance-diagnosis",
+    fellowId: AMINA_ID,
+    status: "graded",
+    answers: [
+      {
+        questionId: "q-diagnosis-driver",
+        answer: { questionId: "q-diagnosis-driver", selectedOptionId: "q-diagnosis-driver-b" },
+        isCorrect: true,
+        pointsAwarded: 1,
+        pointsPossible: 1,
+        gradedAt: "2026-01-11T09:05:00.000Z",
+      },
+      {
+        questionId: "q-diagnosis-metric",
+        answer: { questionId: "q-diagnosis-metric", selectedOptionId: "q-diagnosis-metric-b" },
+        isCorrect: true,
+        pointsAwarded: 1,
+        pointsPossible: 1,
+        gradedAt: "2026-01-11T09:05:00.000Z",
+      },
+      {
+        questionId: "q-diagnosis-explain",
+        answer: {
+          questionId: "q-diagnosis-explain",
+          text: "I'd start by acknowledging the school's strong attendance as a real achievement, then reframe reading fluency as the next milestone building on that foundation. I'd share the Grade 3 data alongside a concrete, time-bound plan so it reads as momentum, not criticism.",
+        },
+        pointsAwarded: 2,
+        pointsPossible: 3,
+        feedback:
+          "Good instinct leading with the win. Next time, name the specific support you'll provide so the headteacher hears a partnership, not just a data point.",
+        gradedAt: "2026-01-11T09:05:00.000Z",
+      },
+    ],
+    scoreEarned: 4,
+    scorePossible: 5,
+    submittedAt: "2026-01-10T14:20:00.000Z",
+    gradedAt: "2026-01-11T09:05:00.000Z",
+  },
+  {
+    id: "att-david-performance-diagnosis",
+    assessmentId: "as-performance-diagnosis-check",
+    classId: "cls-performance-diagnosis",
+    fellowId: DAVID_ID,
+    status: "graded",
+    answers: [
+      {
+        questionId: "q-diagnosis-driver",
+        answer: { questionId: "q-diagnosis-driver", selectedOptionId: "q-diagnosis-driver-a" },
+        isCorrect: false,
+        pointsAwarded: 0,
+        pointsPossible: 1,
+        gradedAt: "2026-01-11T09:15:00.000Z",
+      },
+      {
+        questionId: "q-diagnosis-metric",
+        answer: { questionId: "q-diagnosis-metric", selectedOptionId: "q-diagnosis-metric-b" },
+        isCorrect: true,
+        pointsAwarded: 1,
+        pointsPossible: 1,
+        gradedAt: "2026-01-11T09:15:00.000Z",
+      },
+      {
+        questionId: "q-diagnosis-explain",
+        answer: {
+          questionId: "q-diagnosis-explain",
+          text: "I would show the headteacher both numbers side by side and explain that attendance got children in the door, and now reading fluency is how we make sure they're learning once they're there. I'd propose a joint action plan for Grade 3.",
+        },
+        pointsAwarded: 3,
+        pointsPossible: 3,
+        feedback:
+          "Solid framing. Be specific about who owns the action plan and by when — headteachers respond well to clear ownership.",
+        gradedAt: "2026-01-11T09:15:00.000Z",
+      },
+    ],
+    scoreEarned: 4,
+    scorePossible: 5,
+    submittedAt: "2026-01-10T16:45:00.000Z",
+    gradedAt: "2026-01-11T09:15:00.000Z",
+  },
+  {
+    id: "att-amina-onboarding-fundamentals",
+    assessmentId: "as-onboarding-fundamentals",
+    classId: "cls-program-1-onboarding",
+    fellowId: AMINA_ID,
+    // Still awaiting review: the short-answer question hasn't been graded yet.
+    status: "submitted",
+    answers: [
+      {
+        questionId: "q-outcomes-vs-activities",
+        answer: {
+          questionId: "q-outcomes-vs-activities",
+          selectedOptionId: "q-outcomes-vs-activities-a",
+        },
+        isCorrect: true,
+        pointsAwarded: 1,
+        pointsPossible: 1,
+        gradedAt: "2026-01-14T11:00:00.000Z",
+      },
+      {
+        questionId: "q-franchise-purpose",
+        answer: { questionId: "q-franchise-purpose", selectedOptionId: "q-franchise-purpose-a" },
+        isCorrect: true,
+        pointsAwarded: 1,
+        pointsPossible: 1,
+        gradedAt: "2026-01-14T11:00:00.000Z",
+      },
+      {
+        questionId: "q-onboarding-reflection",
+        answer: {
+          questionId: "q-onboarding-reflection",
+          text: "I'd spend more of week one mapping how Program 1 activities show up in the franchise's shared systems, rather than treating onboarding as a standalone module. That way school staff see one consistent experience from day one.",
+        },
+        pointsAwarded: null,
+        pointsPossible: 3,
+      },
+    ],
+    scoreEarned: 2,
+    scorePossible: 5,
+    submittedAt: "2026-01-14T11:00:00.000Z",
+    gradedAt: null,
+  },
+];

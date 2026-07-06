@@ -4,15 +4,18 @@ import Link from "next/link";
 import { ArrowRight, X } from "lucide-react";
 import type { NavItem } from "@/lib/nav-config";
 import { ClassesFlyout } from "@/components/curriculum/classes-flyout";
+import { CurriculumFlyout } from "@/components/curriculum/curriculum-flyout";
 
 export function NavFlyout({
   item,
   isOpen,
   onClose,
+  onCreateClass,
 }: {
   item: NavItem | null;
   isOpen: boolean;
   onClose: () => void;
+  onCreateClass: () => void;
 }) {
   const Icon = item?.icon;
 
@@ -52,6 +55,8 @@ export function NavFlyout({
       <div className="flex-1 overflow-y-auto border-t border-slate-200">
         {item?.id === "classes" ? (
           <ClassesFlyout onNavigate={onClose} />
+        ) : item?.id === "curriculum" ? (
+          <CurriculumFlyout onNavigate={onClose} onCreateClass={onCreateClass} />
         ) : (
           <div className="px-6 py-5">
             <p className="text-sm leading-relaxed text-slate-600">

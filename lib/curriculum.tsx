@@ -30,7 +30,7 @@ interface CurriculumContextValue {
   getClass: (classId: string) => FoundClass | null;
   toggleClassStatus: (classId: string) => void;
   updateClass: (classId: string, patch: Partial<ClassRecord>) => void;
-  addClass: (moduleId: string) => void;
+  addClass: (moduleId: string) => ClassRecord;
   addModule: () => void;
   resetToSample: () => void;
 }
@@ -116,28 +116,24 @@ export function CurriculumProvider({
 
   const addClass = useCallback(
     (moduleId: string) => {
+      const klass: ClassRecord = {
+        id: makeId("cls"),
+        moduleId,
+        title: "Untitled class",
+        summary: "",
+        status: "locked",
+        notes: "",
+        transcript: "",
+        resources: [] as ClassResource[],
+      };
       commit(
         modules.map((module) =>
           module.id === moduleId
-            ? {
-                ...module,
-                classes: [
-                  ...module.classes,
-                  {
-                    id: makeId("cls"),
-                    moduleId,
-                    title: "Untitled class",
-                    summary: "",
-                    status: "locked",
-                    notes: "",
-                    transcript: "",
-                    resources: [] as ClassResource[],
-                  },
-                ],
-              }
+            ? { ...module, classes: [...module.classes, klass] }
             : module
         )
       );
+      return klass;
     },
     [modules, commit]
   );

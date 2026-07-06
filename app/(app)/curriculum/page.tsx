@@ -1,19 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Pencil, Plus, RotateCcw } from "lucide-react";
 import { useCurrentProfile } from "@/lib/current-profile";
 import { useCurriculum } from "@/lib/curriculum";
-import {
-  defaultScheduleIso,
-  formatReleaseDate,
-  isReleased,
-  isScheduledPending,
-} from "@/lib/availability";
+import { defaultScheduleIso, isReleased } from "@/lib/availability";
 import type { ClassRecord } from "@/lib/types";
 import { StatusPill } from "@/components/curriculum/status-pill";
 import { ClassEditorModal } from "@/components/curriculum/class-editor-modal";
 import { AvailabilityRow } from "@/components/availability-row";
+
+// Supports the "Create class" nav flyout: it creates the class, then sends
+// the admin here with ?edit={id} so the editor opens immediately. Clear the
+// param right after so a refresh doesn't reopen it. Split out because
+// useSearchParams() requires a Suspense boundary.
+function EditParamHandler({ onFound }: { onFound: (klass: ClassRecord) => void }) {
+  const { getClass } = useCurriculum();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const editId = searchParams.get("edit");
+    if (!editId) return;
+    const found = getClass(editId);
+    if (found) onFound(found.klass);
+    router.replace("/curriculum");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  return null;
+}
 
 export default function CurriculumPage() {
   const { profile } = useCurrentProfile();
@@ -31,6 +48,9 @@ export default function CurriculumPage() {
 
   return (
     <div className="max-w-4xl">
+      <Suspense fallback={null}>
+        <EditParamHandler onFound={setEditing} />
+      </Suspense>
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
           <h2 className="text-xl font-semibold text-brand-navy">Curriculum</h2>
@@ -52,13 +72,6 @@ export default function CurriculumPage() {
 
       <div className="space-y-5">
         {modules.map((module) => {
-          // Not-yet-launched classes that have a scheduled go-live date.
-          const upcoming = module.classes.flatMap((c) =>
-            isScheduledPending(c) && c.releaseAt
-              ? [`${c.title} launches ${formatReleaseDate(c.releaseAt)}`]
-              : []
-          );
-
           return (
           <section
             key={module.id}
@@ -77,11 +90,6 @@ export default function CurriculumPage() {
               {module.description && (
                 <p className="mt-0.5 text-sm text-slate-500">
                   {module.description}
-                </p>
-              )}
-              {upcoming.length > 0 && (
-                <p className="mt-1 text-sm italic text-slate-400">
-                  {upcoming.join(" · ")}
                 </p>
               )}
             </header>

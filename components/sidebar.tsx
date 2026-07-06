@@ -3,18 +3,23 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { isNavItemActive, NAV_ITEMS } from "@/lib/nav-config";
 import { useCurrentProfile } from "@/lib/current-profile";
+import { useCurriculum } from "@/lib/curriculum";
 import { RoleSwitcher } from "@/components/role-switcher";
 import { NavFlyout } from "@/components/nav-flyout";
+import { ModulePickerModal } from "@/components/curriculum/module-picker-modal";
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { profile } = useCurrentProfile();
+  const { addClass } = useCurriculum();
 
   const [openItemId, setOpenItemId] = useState<string | null>(null);
   const [panelItemId, setPanelItemId] = useState<string | null>(null);
+  const [pickingModule, setPickingModule] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const visibleItems = NAV_ITEMS.filter((item) =>
@@ -32,6 +37,21 @@ export function Sidebar() {
     setPanelItemId(itemId);
     setOpenItemId(itemId);
   };
+
+  // "Create Class" is a two-step popout: close the nav flyout, ask which
+  // module (ModulePickerModal), then create the class and jump straight into
+  // its editor. Owned here (not inside the flyout) so the module picker isn't
+  // affected when the flyout itself closes and goes inert.
+  function handleCreateClass() {
+    closePanel();
+    setPickingModule(true);
+  }
+
+  function handleModuleSelected(moduleId: string) {
+    setPickingModule(false);
+    const klass = addClass(moduleId);
+    router.push(`/curriculum?edit=${klass.id}`);
+  }
 
   // Auto-close when the route changes (e.g. the panel's own "Open" link was
   // followed) or when the active profile changes (a role switch may hide the
@@ -132,6 +152,13 @@ export function Sidebar() {
         item={panelItem}
         isOpen={openItemId !== null}
         onClose={closePanel}
+        onCreateClass={handleCreateClass}
+      />
+
+      <ModulePickerModal
+        open={pickingModule}
+        onClose={() => setPickingModule(false)}
+        onSelect={handleModuleSelected}
       />
     </div>
   );
