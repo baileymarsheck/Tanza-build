@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ExternalLink, Pencil } from "lucide-react";
+import { ExternalLink, Pencil, RotateCcw } from "lucide-react";
 import { useCurriculum } from "@/lib/curriculum";
 import { useAssessments } from "@/lib/assessments";
 import { defaultScheduleIso } from "@/lib/availability";
@@ -38,7 +38,7 @@ function EditParamHandler({
 
 export function AdminAssessmentsView() {
   const { modules } = useCurriculum();
-  const { attempts, getAssessmentsForClass } = useAssessments();
+  const { attempts, getAssessmentsForClass, resetToSample } = useAssessments();
 
   const [editingAssessment, setEditingAssessment] =
     useState<AssessmentRecord | null>(null);
@@ -55,15 +55,26 @@ export function AdminAssessmentsView() {
             Manage the assessments attached to each class.
           </p>
         </div>
-        <a
-          href="/assessments/questions"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
-        >
-          Question Bank
-          <ExternalLink size={14} />
-        </a>
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={resetToSample}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+            title="Restore the sample questions/assessments"
+          >
+            <RotateCcw size={15} />
+            Reset sample
+          </button>
+          <a
+            href="/assessments/questions"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+          >
+            Question Bank
+            <ExternalLink size={14} />
+          </a>
+        </div>
       </div>
 
       {/* Assessments, grouped by module */}
