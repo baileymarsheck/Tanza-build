@@ -42,9 +42,11 @@ function makeVideoId() {
 export function ClassEditorModal({
   klass,
   onClose,
+  onDelete,
 }: {
   klass: ClassRecord | null;
   onClose: () => void;
+  onDelete: () => void;
 }) {
   const { updateClass } = useCurriculum();
   const { getAssessmentsForClass, addAssessment, deleteAssessment } =
@@ -534,21 +536,31 @@ export function ClassEditorModal({
             </div>
           )}
 
-        <div className="flex items-center justify-end gap-2 border-t border-slate-200 px-6 py-4">
+        <div className="flex items-center justify-between gap-2 border-t border-slate-200 px-6 py-4">
           <button
             type="button"
-            onClick={onClose}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+            onClick={onDelete}
+            className="inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
           >
-            Cancel
+            <Trash2 size={15} />
+            Delete class
           </button>
-          <button
-            type="button"
-            onClick={save}
-            className="rounded-lg bg-brand-navy px-4 py-2 text-sm font-medium text-white hover:bg-brand-navy-light"
-          >
-            Save changes
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={save}
+              className="rounded-lg bg-brand-navy px-4 py-2 text-sm font-medium text-white hover:bg-brand-navy-light"
+            >
+              Save changes
+            </button>
+          </div>
         </div>
       </EditorModal>
 

@@ -2,14 +2,16 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Pencil, Plus, RotateCcw } from "lucide-react";
+import { Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { useCurrentProfile } from "@/lib/current-profile";
 import { useCurriculum } from "@/lib/curriculum";
+import { useAssessments } from "@/lib/assessments";
 import { defaultScheduleIso, isReleased } from "@/lib/availability";
 import type { ClassRecord } from "@/lib/types";
 import { StatusPill } from "@/components/curriculum/status-pill";
 import { ClassEditorModal } from "@/components/curriculum/class-editor-modal";
 import { AvailabilityRow } from "@/components/availability-row";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 // Supports the "Create class" nav flyout: it creates the class, then sends
 // the admin here with ?edit={id} so the editor opens immediately. Clear the
@@ -34,8 +36,23 @@ function EditParamHandler({ onFound }: { onFound: (klass: ClassRecord) => void }
 
 export default function CurriculumPage() {
   const { profile } = useCurrentProfile();
-  const { modules, addClass, addModule, resetToSample } = useCurriculum();
+  const { modules, addClass, deleteClass, addModule, resetToSample } =
+    useCurriculum();
+  const { getAssessmentsForClass, deleteAssessment } = useAssessments();
   const [editing, setEditing] = useState<ClassRecord | null>(null);
+  const [deleteCandidate, setDeleteCandidate] = useState<ClassRecord | null>(
+    null
+  );
+
+  function handleConfirmDelete() {
+    if (!deleteCandidate) return;
+    getAssessmentsForClass(deleteCandidate.id).forEach((a) =>
+      deleteAssessment(a.id)
+    );
+    deleteClass(deleteCandidate.id);
+    if (editing?.id === deleteCandidate.id) setEditing(null);
+    setDeleteCandidate(null);
+  }
 
   if (profile.role !== "admin") {
     return (
@@ -100,6 +117,7 @@ export default function CurriculumPage() {
                   key={klass.id}
                   klass={klass}
                   onEdit={() => setEditing(klass)}
+                  onDelete={() => setDeleteCandidate(klass)}
                 />
               ))}
 
@@ -128,7 +146,21 @@ export default function CurriculumPage() {
         Add module
       </button>
 
-      <ClassEditorModal klass={editing} onClose={() => setEditing(null)} />
+      <ClassEditorModal
+        klass={editing}
+        onClose={() => setEditing(null)}
+        onDelete={() => setDeleteCandidate(editing)}
+      />
+
+      <ConfirmDialog
+        open={deleteCandidate !== null}
+        title={`Delete "${deleteCandidate?.title || "this class"}"?`}
+        message="This removes the class, its resources and videos, and any assessments attached to it. This can't be undone."
+        confirmLabel="Delete"
+        destructive
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteCandidate(null)}
+      />
     </div>
   );
 }
@@ -138,9 +170,11 @@ export default function CurriculumPage() {
 function AdminClassRow({
   klass,
   onEdit,
+  onDelete,
 }: {
   klass: ClassRecord;
   onEdit: () => void;
+  onDelete: () => void;
 }) {
   const { toggleClassStatus, updateClass } = useCurriculum();
 
@@ -168,6 +202,15 @@ function AdminClassRow({
         >
           <Pencil size={14} />
           Edit
+        </button>
+
+        <button
+          type="button"
+          onClick={onDelete}
+          aria-label={`Delete ${klass.title}`}
+          className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-slate-300 text-slate-500 hover:bg-red-50 hover:text-red-600"
+        >
+          <Trash2 size={14} />
         </button>
 
         <AvailabilityRow

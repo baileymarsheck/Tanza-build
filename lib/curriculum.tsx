@@ -32,6 +32,7 @@ interface CurriculumContextValue {
   toggleClassStatus: (classId: string) => void;
   updateClass: (classId: string, patch: Partial<ClassRecord>) => void;
   addClass: (moduleId: string) => ClassRecord;
+  deleteClass: (classId: string) => void;
   addModule: () => void;
   resetToSample: () => void;
 }
@@ -135,6 +136,18 @@ export function CurriculumProvider({
     [modules, commit]
   );
 
+  const deleteClass = useCallback(
+    (classId: string) => {
+      commit(
+        modules.map((module) => ({
+          ...module,
+          classes: module.classes.filter((c) => c.id !== classId),
+        }))
+      );
+    },
+    [modules, commit]
+  );
+
   const addModule = useCallback(() => {
     commit([
       ...modules,
@@ -158,6 +171,7 @@ export function CurriculumProvider({
       toggleClassStatus,
       updateClass,
       addClass,
+      deleteClass,
       addModule,
       resetToSample,
     }),
@@ -167,6 +181,7 @@ export function CurriculumProvider({
       toggleClassStatus,
       updateClass,
       addClass,
+      deleteClass,
       addModule,
       resetToSample,
     ]
