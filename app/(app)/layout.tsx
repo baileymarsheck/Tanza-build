@@ -1,5 +1,6 @@
 import { Sidebar } from "@/components/sidebar";
 import { Topbar } from "@/components/topbar";
+import { FeedbackWidget } from "@/components/feedback-widget";
 
 export default function AppShellLayout({
   children,
@@ -15,6 +16,7 @@ export default function AppShellLayout({
           {children}
         </main>
       </div>
+      <FeedbackWidget />
     </div>
   );
 }
