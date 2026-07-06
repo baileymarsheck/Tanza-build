@@ -278,3 +278,33 @@ create policy "Assessment attempts are readable by anyone"
 drop policy if exists "Attempt answers are readable by anyone" on attempt_answers;
 create policy "Attempt answers are readable by anyone"
   on attempt_answers for select using (true);
+
+
+-- --------------------------------------------------------------------------
+-- Feedback: free-form bug reports / feature requests submitted from the
+-- floating "User Feedback" widget, visible to any signed-in role.
+
+create table if not exists feedback (
+  id text primary key,
+  profile_id uuid not null references profiles (id) on delete cascade,
+  profile_name text not null,
+  category text not null check (category in ('bug', 'feature', 'general')),
+  message text not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists feedback_created_at_idx
+  on feedback (created_at desc);
+
+alter table feedback enable row level security;
+
+-- No auth yet, so anyone using the anon key can submit and read feedback —
+-- same scaffold-stage tradeoff noted above for assessment_attempts. Once
+-- Supabase Auth lands, tighten select to admins only and insert to
+-- `profile_id = auth.uid()`.
+drop policy if exists "Feedback is insertable by anyone" on feedback;
+create policy "Feedback is insertable by anyone"
+  on feedback for insert with check (true);
+
+drop policy if exists "Feedback is readable by anyone" on feedback;
+create policy "Feedback is readable by anyone"
+  on feedback for select using (true);

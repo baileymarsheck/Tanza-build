@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { MessageSquarePlus, X } from "lucide-react";
 import { useCurrentProfile } from "@/lib/current-profile";
 import { saveFeedback, type FeedbackCategory } from "@/lib/feedback";
+import { useDismissable } from "@/lib/use-dismissable";
 
 // Floating, always-available way for either role to flag a bug or request a
 // change to the platform itself — distinct from anything modeled in the
@@ -15,50 +16,33 @@ export function FeedbackWidget() {
   const [category, setCategory] = useState<FeedbackCategory>("general");
   const [message, setMessage] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  function close() {
+  const close = useCallback(() => {
     setIsOpen(false);
     setSubmitted(false);
+    setSubmitting(false);
     setCategory("general");
     setMessage("");
-  }
+  }, []);
 
-  function handleSubmit(event: React.FormEvent) {
+  async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (!message.trim()) return;
+    if (!message.trim() || submitting) return;
 
-    saveFeedback({
+    setSubmitting(true);
+    await saveFeedback({
       profileId: profile.id,
       profileName: profile.name,
       category,
       message: message.trim(),
     });
+    setSubmitting(false);
     setSubmitted(true);
   }
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    function handlePointerDown(event: PointerEvent) {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
-        close();
-      }
-    }
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") close();
-    }
-
-    document.addEventListener("pointerdown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("pointerdown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isOpen]);
+  useDismissable(isOpen, close, containerRef);
 
   return (
     <div ref={containerRef} className="fixed bottom-6 right-6 z-50">
@@ -142,10 +126,10 @@ export function FeedbackWidget() {
 
               <button
                 type="submit"
-                disabled={!message.trim()}
+                disabled={!message.trim() || submitting}
                 className="w-full rounded-md bg-brand-navy px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy/90 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Send feedback
+                {submitting ? "Sending…" : "Send feedback"}
               </button>
             </form>
           )}
