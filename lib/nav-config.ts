@@ -2,6 +2,7 @@ import {
   BookOpen,
   ClipboardList,
   FileCheck,
+  GraduationCap,
   Home,
   type LucideIcon,
   PlayCircle,
@@ -81,6 +82,17 @@ export const NAV_ITEMS: NavItem[] = [
     hasFlyout: true,
   },
   {
+    id: "cohort",
+    label: "Fellow Cohort",
+    href: "/performance/cohort",
+    icon: GraduationCap,
+    roles: ["admin"],
+    description:
+      "See each fellow's assessment completion, scores, and feedback at a glance.",
+    // Reached via the Performance flyout instead of its own sidebar entry.
+    hiddenFromSidebar: true,
+  },
+  {
     id: "submissions",
     label: "Submissions Review",
     href: "/submissions",
@@ -111,5 +123,13 @@ export function isNavItemActive(item: NavItem, pathname: string): boolean {
 }
 
 export function getActiveNavItem(pathname: string): NavItem | undefined {
-  return NAV_ITEMS.find((item) => isNavItemActive(item, pathname));
+  const matches = NAV_ITEMS.filter((item) => isNavItemActive(item, pathname));
+  if (matches.length === 0) return undefined;
+
+  // When a route matches more than one item (e.g. /performance/cohort
+  // matches both "cohort" and its parent "performance"), the most specific
+  // (longest href) one wins, regardless of array order.
+  return matches.reduce((best, item) =>
+    item.href.length > best.href.length ? item : best
+  );
 }
