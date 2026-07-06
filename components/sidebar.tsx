@@ -7,20 +7,24 @@ import { usePathname, useRouter } from "next/navigation";
 import { isNavItemActive, NAV_ITEMS } from "@/lib/nav-config";
 import { useCurrentProfile } from "@/lib/current-profile";
 import { useCurriculum } from "@/lib/curriculum";
+import { useAssessments } from "@/lib/assessments";
 import { useDismissable } from "@/lib/use-dismissable";
 import { RoleSwitcher } from "@/components/role-switcher";
 import { NavFlyout } from "@/components/nav-flyout";
 import { ModulePickerModal } from "@/components/curriculum/module-picker-modal";
+import { ClassPickerModal } from "@/components/assessments/class-picker-modal";
 
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { profile } = useCurrentProfile();
   const { addClass } = useCurriculum();
+  const { addAssessment } = useAssessments();
 
   const [openItemId, setOpenItemId] = useState<string | null>(null);
   const [panelItemId, setPanelItemId] = useState<string | null>(null);
   const [pickingModule, setPickingModule] = useState(false);
+  const [pickingClass, setPickingClass] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const visibleItems = NAV_ITEMS.filter(
@@ -52,6 +56,20 @@ export function Sidebar() {
     setPickingModule(false);
     const klass = addClass(moduleId);
     router.push(`/curriculum?edit=${klass.id}`);
+  }
+
+  // "Create Assessment" mirrors "Create Class": close the nav flyout, ask
+  // which class (ClassPickerModal), then create the assessment and jump
+  // straight into its editor.
+  function handleCreateAssessment() {
+    closePanel();
+    setPickingClass(true);
+  }
+
+  function handleClassSelected(classId: string) {
+    setPickingClass(false);
+    const assessment = addAssessment(classId);
+    router.push(`/assessments?edit=${assessment.id}`);
   }
 
   // Auto-close when the route changes (e.g. the panel's own "Open" link was
@@ -135,12 +153,19 @@ export function Sidebar() {
         isOpen={openItemId !== null}
         onClose={closePanel}
         onCreateClass={handleCreateClass}
+        onCreateAssessment={handleCreateAssessment}
       />
 
       <ModulePickerModal
         open={pickingModule}
         onClose={() => setPickingModule(false)}
         onSelect={handleModuleSelected}
+      />
+
+      <ClassPickerModal
+        open={pickingClass}
+        onClose={() => setPickingClass(false)}
+        onSelect={handleClassSelected}
       />
     </div>
   );

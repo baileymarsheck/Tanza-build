@@ -6,17 +6,20 @@ import type { NavItem } from "@/lib/nav-config";
 import { ClassesFlyout } from "@/components/curriculum/classes-flyout";
 import { CurriculumFlyout } from "@/components/curriculum/curriculum-flyout";
 import { AssessmentsFlyout } from "@/components/assessments/assessments-flyout";
+import { PerformanceFlyout } from "@/components/performance/performance-flyout";
 
 export function NavFlyout({
   item,
   isOpen,
   onClose,
   onCreateClass,
+  onCreateAssessment,
 }: {
   item: NavItem | null;
   isOpen: boolean;
   onClose: () => void;
   onCreateClass: () => void;
+  onCreateAssessment: () => void;
 }) {
   const Icon = item?.icon;
 
@@ -59,7 +62,12 @@ export function NavFlyout({
         ) : item?.id === "curriculum" ? (
           <CurriculumFlyout onNavigate={onClose} onCreateClass={onCreateClass} />
         ) : item?.id === "assessments" ? (
-          <AssessmentsFlyout onNavigate={onClose} />
+          <AssessmentsFlyout
+            onNavigate={onClose}
+            onCreateAssessment={onCreateAssessment}
+          />
+        ) : item?.id === "performance" ? (
+          <PerformanceFlyout onNavigate={onClose} />
         ) : (
           <div className="px-6 py-5">
             <p className="text-sm leading-relaxed text-slate-600">

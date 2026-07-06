@@ -5,7 +5,12 @@ import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
 import { useAssessments } from "@/lib/assessments";
 import { EditorModal } from "@/components/modal";
 import { AvailabilityField } from "@/components/availability-field";
-import type { AssessmentRecord } from "@/lib/types";
+import { QuestionEditorModal } from "@/components/assessments/question-editor-modal";
+import type { AssessmentRecord, Question } from "@/lib/types";
+
+function makeOptionId() {
+  return `opt-${Math.random().toString(36).slice(2, 9)}`;
+}
 
 // Full-screen modal editor for a single assessment: title/description,
 // availability, and an ordered subset of the shared question bank. Same
@@ -17,9 +22,10 @@ export function AssessmentEditorModal({
   assessment: AssessmentRecord | null;
   onClose: () => void;
 }) {
-  const { questions, updateAssessment } = useAssessments();
+  const { questions, updateAssessment, addQuestion } = useAssessments();
   const [draft, setDraft] = useState<AssessmentRecord | null>(assessment);
   const [search, setSearch] = useState("");
+  const [newQuestion, setNewQuestion] = useState<Question | null>(null);
 
   useEffect(() => {
     setDraft(assessment);
@@ -44,6 +50,25 @@ export function AssessmentEditorModal({
     setDraft((d) =>
       d ? { ...d, questionIds: d.questionIds.filter((id) => id !== questionId) } : d
     );
+  }
+
+  // Creates a blank question straight into the shared bank, attaches it to
+  // this assessment immediately, and opens its editor so the admin can fill
+  // it in without leaving the assessment they're building.
+  function handleCreateQuestion() {
+    const question = addQuestion({
+      type: "multiple-choice",
+      prompt: "",
+      options: [
+        { id: makeOptionId(), text: "", correct: false },
+        { id: makeOptionId(), text: "", correct: false },
+      ],
+      points: 1,
+      aptitudeWeights: {},
+      tags: [],
+    });
+    addQuestionToDraft(question.id);
+    setNewQuestion(question);
   }
 
   function moveQuestion(index: number, direction: -1 | 1) {
@@ -88,14 +113,15 @@ export function AssessmentEditorModal({
     : [];
 
   return (
-    <EditorModal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Edit assessment"
-      subtitle={draft?.title}
-      ariaLabel={draft ? `Edit ${draft.title}` : undefined}
-      zIndexClassName="z-[60]"
-    >
+    <>
+      <EditorModal
+        isOpen={isOpen}
+        onClose={onClose}
+        title="Edit assessment"
+        subtitle={draft?.title}
+        ariaLabel={draft ? `Edit ${draft.title}` : undefined}
+        zIndexClassName="z-[60]"
+      >
       {draft && (
             <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6">
               <Field label="Title">
@@ -188,12 +214,22 @@ export function AssessmentEditorModal({
                 </div>
 
                 <div className="mt-3">
-                  <input
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search the question bank by prompt or tag…"
-                    className="input"
-                  />
+                  <div className="flex items-center gap-2">
+                    <input
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      placeholder="Search the question bank by prompt or tag…"
+                      className="input"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleCreateQuestion}
+                      className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-sm font-medium text-brand-navy hover:text-brand-orange"
+                    >
+                      <Plus size={14} />
+                      New question
+                    </button>
+                  </div>
                   {search.trim() && (
                     <div className="mt-2 space-y-1.5">
                       {searchResults.length === 0 && (
@@ -240,7 +276,13 @@ export function AssessmentEditorModal({
           Save changes
         </button>
       </div>
-    </EditorModal>
+      </EditorModal>
+
+      <QuestionEditorModal
+        question={newQuestion}
+        onClose={() => setNewQuestion(null)}
+      />
+    </>
   );
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ExternalLink, Pencil } from "lucide-react";
 import { useCurriculum } from "@/lib/curriculum";
 import { useAssessments } from "@/lib/assessments";
@@ -9,6 +10,31 @@ import { StatusPill } from "@/components/curriculum/status-pill";
 import { AvailabilityRow } from "@/components/availability-row";
 import { AssessmentEditorModal } from "@/components/assessments/assessment-editor-modal";
 import type { AssessmentRecord } from "@/lib/types";
+
+// Supports the "Create Assessment" nav flyout: it creates the assessment,
+// then sends the admin here with ?edit={id} so the editor opens immediately.
+// Clear the param right after so a refresh doesn't reopen it. Split out
+// because useSearchParams() requires a Suspense boundary.
+function EditParamHandler({
+  onFound,
+}: {
+  onFound: (assessment: AssessmentRecord) => void;
+}) {
+  const { getAssessment } = useAssessments();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const editId = searchParams.get("edit");
+    if (!editId) return;
+    const found = getAssessment(editId);
+    if (found) onFound(found);
+    router.replace("/assessments");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  return null;
+}
 
 export function AdminAssessmentsView() {
   const { modules } = useCurriculum();
@@ -19,6 +45,9 @@ export function AdminAssessmentsView() {
 
   return (
     <div className="max-w-4xl space-y-8">
+      <Suspense fallback={null}>
+        <EditParamHandler onFound={setEditingAssessment} />
+      </Suspense>
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-xl font-semibold text-brand-navy">Assessments</h2>
