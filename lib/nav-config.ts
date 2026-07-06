@@ -23,6 +23,10 @@ export interface NavItem {
   // Dashboard) navigate straight to their route, since there's nothing to
   // preview first.
   hasFlyout?: boolean;
+  // When true, the item is kept out of the sidebar list entirely (reached
+  // instead via another item's flyout menu) but still counts for the
+  // topbar title / active-route matching below.
+  hiddenFromSidebar?: boolean;
 }
 
 // Single source of truth for the sidebar. Adding a future feature area means
@@ -84,7 +88,8 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ["admin"],
     description:
       "Review case study and assessment submissions, and leave written feedback.",
-    hasFlyout: true,
+    // Reached via the Assessments flyout instead of its own sidebar entry.
+    hiddenFromSidebar: true,
   },
   {
     id: "competencies",

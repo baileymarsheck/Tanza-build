@@ -5,6 +5,7 @@ import { ArrowRight, X } from "lucide-react";
 import type { NavItem } from "@/lib/nav-config";
 import { ClassesFlyout } from "@/components/curriculum/classes-flyout";
 import { CurriculumFlyout } from "@/components/curriculum/curriculum-flyout";
+import { AssessmentsFlyout } from "@/components/assessments/assessments-flyout";
 
 export function NavFlyout({
   item,
@@ -57,6 +58,8 @@ export function NavFlyout({
           <ClassesFlyout onNavigate={onClose} />
         ) : item?.id === "curriculum" ? (
           <CurriculumFlyout onNavigate={onClose} onCreateClass={onCreateClass} />
+        ) : item?.id === "assessments" ? (
+          <AssessmentsFlyout onNavigate={onClose} />
         ) : (
           <div className="px-6 py-5">
             <p className="text-sm leading-relaxed text-slate-600">

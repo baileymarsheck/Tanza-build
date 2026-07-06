@@ -22,8 +22,8 @@ export function Sidebar() {
   const [pickingModule, setPickingModule] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const visibleItems = NAV_ITEMS.filter((item) =>
-    item.roles.includes(profile.role)
+  const visibleItems = NAV_ITEMS.filter(
+    (item) => item.roles.includes(profile.role) && !item.hiddenFromSidebar
   );
   const panelItem = NAV_ITEMS.find((item) => item.id === panelItemId) ?? null;
 
