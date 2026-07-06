@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronDown, ChevronUp, Plus, Trash2, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
 import { useAssessments } from "@/lib/assessments";
+import { EditorModal } from "@/components/modal";
 import { AvailabilityField } from "@/components/availability-field";
 import type { AssessmentRecord } from "@/lib/types";
 
@@ -24,15 +25,6 @@ export function AssessmentEditorModal({
     setDraft(assessment);
     setSearch("");
   }, [assessment]);
-
-  useEffect(() => {
-    if (!assessment) return;
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [assessment, onClose]);
 
   const isOpen = assessment !== null && draft !== null;
 
@@ -96,39 +88,15 @@ export function AssessmentEditorModal({
     : [];
 
   return (
-    <div
-      inert={!isOpen}
-      className={`fixed inset-0 z-[60] transition-opacity duration-200 ${
-        isOpen ? "opacity-100" : "pointer-events-none opacity-0"
-      }`}
+    <EditorModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Edit assessment"
+      subtitle={draft?.title}
+      ariaLabel={draft ? `Edit ${draft.title}` : undefined}
+      zIndexClassName="z-[60]"
     >
-      <div onClick={onClose} aria-hidden className="absolute inset-0 bg-slate-900/40" />
-
-      <div className="absolute inset-0 flex items-center justify-center p-4 sm:p-6">
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={draft ? `Edit ${draft.title}` : undefined}
-          className={`flex h-full w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl transition-transform duration-200 ease-out ${
-            isOpen ? "scale-100" : "scale-95"
-          }`}
-        >
-          <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
-            <div>
-              <h2 className="text-lg font-semibold text-brand-navy">Edit assessment</h2>
-              {draft?.title && <p className="text-sm text-slate-500">{draft.title}</p>}
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Close editor"
-              className="flex size-9 items-center justify-center rounded-lg border border-slate-300 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
-            >
-              <X size={18} />
-            </button>
-          </div>
-
-          {draft && (
+      {draft && (
             <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6">
               <Field label="Title">
                 <input
@@ -256,25 +224,23 @@ export function AssessmentEditorModal({
             </div>
           )}
 
-          <div className="flex items-center justify-end gap-2 border-t border-slate-200 px-6 py-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={save}
-              className="rounded-lg bg-brand-navy px-4 py-2 text-sm font-medium text-white hover:bg-brand-navy-light"
-            >
-              Save changes
-            </button>
-          </div>
-        </div>
+      <div className="flex items-center justify-end gap-2 border-t border-slate-200 px-6 py-4">
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          onClick={save}
+          className="rounded-lg bg-brand-navy px-4 py-2 text-sm font-medium text-white hover:bg-brand-navy-light"
+        >
+          Save changes
+        </button>
       </div>
-    </div>
+    </EditorModal>
   );
 }
 

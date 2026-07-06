@@ -16,6 +16,7 @@ import {
 } from "@/lib/assessments-data";
 import { isReleased } from "@/lib/availability";
 import { makeId } from "@/lib/id";
+import { getStoredItem, setStoredItem } from "@/lib/storage";
 import type {
   AssessmentAttempt,
   AssessmentRecord,
@@ -126,23 +127,19 @@ export function AssessmentsProvider({
   const [state, setState] = useState<AssessmentsState>(SEED_STATE);
 
   useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem(ASSESSMENTS_STORAGE_KEY);
-      if (stored) {
+    const stored = getStoredItem(ASSESSMENTS_STORAGE_KEY);
+    if (stored) {
+      try {
         setState(JSON.parse(stored) as AssessmentsState);
+      } catch {
+        // Corrupt storage — keep the seed.
       }
-    } catch {
-      // Corrupt or unavailable storage — keep the seed.
     }
   }, []);
 
   const commit = useCallback((next: AssessmentsState) => {
     setState(next);
-    try {
-      window.localStorage.setItem(ASSESSMENTS_STORAGE_KEY, JSON.stringify(next));
-    } catch {
-      // Ignore storage write failures — in-memory state still updates.
-    }
+    setStoredItem(ASSESSMENTS_STORAGE_KEY, JSON.stringify(next));
   }, []);
 
   // --- Question bank -------------------------------------------------

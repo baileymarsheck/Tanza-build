@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { getStoredItem, setStoredItem } from "@/lib/storage";
 import type { Profile } from "@/lib/types";
 
 // Baked-in fallback so the app shell is demoable with zero setup, before a
@@ -46,7 +47,7 @@ export function CurrentProfileProvider({
   );
 
   useEffect(() => {
-    const storedId = window.localStorage.getItem(ACTIVE_PROFILE_STORAGE_KEY);
+    const storedId = getStoredItem(ACTIVE_PROFILE_STORAGE_KEY);
     if (storedId) {
       setActiveProfileId(storedId);
     }
@@ -76,7 +77,7 @@ export function CurrentProfileProvider({
 
   const setActiveProfile = useCallback((id: string) => {
     setActiveProfileId(id);
-    window.localStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, id);
+    setStoredItem(ACTIVE_PROFILE_STORAGE_KEY, id);
   }, []);
 
   const profile = useMemo(

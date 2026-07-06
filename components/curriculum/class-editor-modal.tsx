@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Pencil, Plus, Trash2, Upload, X } from "lucide-react";
+import { Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { useCurriculum } from "@/lib/curriculum";
 import { useAssessments } from "@/lib/assessments";
 import {
@@ -9,6 +9,7 @@ import {
   uploadClassResource,
   uploadClassVideo,
 } from "@/lib/supabase/storage";
+import { EditorModal } from "@/components/modal";
 import { AvailabilityField } from "@/components/availability-field";
 import { AssessmentEditorModal } from "@/components/assessments/assessment-editor-modal";
 import { StatusPill } from "@/components/curriculum/status-pill";
@@ -65,15 +66,6 @@ export function ClassEditorModal({
     setVideoUploadError(null);
     setResourceUploadError(null);
   }, [klass]);
-
-  useEffect(() => {
-    if (!klass) return;
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [klass, onClose]);
 
   const isOpen = klass !== null && draft !== null;
 
@@ -235,48 +227,16 @@ export function ClassEditorModal({
   }
 
   return (
-    <div
-      inert={!isOpen}
-      className={`fixed inset-0 z-50 transition-opacity duration-200 ${
-        isOpen ? "opacity-100" : "pointer-events-none opacity-0"
-      }`}
-    >
-      {/* Scrim */}
-      <div
-        onClick={onClose}
-        aria-hidden
-        className="absolute inset-0 bg-slate-900/40"
-      />
-
-      <div className="absolute inset-0 flex items-center justify-center p-4 sm:p-6">
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={draft ? `Edit ${draft.title}` : undefined}
-          className={`flex h-full w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl transition-transform duration-200 ease-out ${
-            isOpen ? "scale-100" : "scale-95"
-          }`}
-        >
-          <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
-            <div>
-              <h2 className="text-lg font-semibold text-brand-navy">
-                Edit class
-              </h2>
-              {draft?.title && (
-                <p className="text-sm text-slate-500">{draft.title}</p>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Close editor"
-              className="flex size-9 items-center justify-center rounded-lg border border-slate-300 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
-            >
-              <X size={18} />
-            </button>
-          </div>
-
-          {draft && (
+    <>
+      <EditorModal
+        isOpen={isOpen}
+        onClose={onClose}
+        title="Edit class"
+        subtitle={draft?.title}
+        ariaLabel={draft ? `Edit ${draft.title}` : undefined}
+        maxWidthClassName="max-w-5xl"
+      >
+        {draft && (
             <div className="grid flex-1 gap-x-8 gap-y-5 overflow-y-auto px-6 py-6 lg:grid-cols-2">
               {/* Left column: core fields */}
               <div className="space-y-5">
@@ -574,30 +534,29 @@ export function ClassEditorModal({
             </div>
           )}
 
-          <div className="flex items-center justify-end gap-2 border-t border-slate-200 px-6 py-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={save}
-              className="rounded-lg bg-brand-navy px-4 py-2 text-sm font-medium text-white hover:bg-brand-navy-light"
-            >
-              Save changes
-            </button>
-          </div>
+        <div className="flex items-center justify-end gap-2 border-t border-slate-200 px-6 py-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={save}
+            className="rounded-lg bg-brand-navy px-4 py-2 text-sm font-medium text-white hover:bg-brand-navy-light"
+          >
+            Save changes
+          </button>
         </div>
-      </div>
+      </EditorModal>
 
       <AssessmentEditorModal
         assessment={editingAssessment}
         onClose={() => setEditingAssessment(null)}
       />
-    </div>
+    </>
   );
 }
 

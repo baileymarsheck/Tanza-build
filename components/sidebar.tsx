@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { isNavItemActive, NAV_ITEMS } from "@/lib/nav-config";
 import { useCurrentProfile } from "@/lib/current-profile";
 import { useCurriculum } from "@/lib/curriculum";
+import { useDismissable } from "@/lib/use-dismissable";
 import { RoleSwitcher } from "@/components/role-switcher";
 import { NavFlyout } from "@/components/nav-flyout";
 import { ModulePickerModal } from "@/components/curriculum/module-picker-modal";
@@ -27,7 +28,7 @@ export function Sidebar() {
   );
   const panelItem = NAV_ITEMS.find((item) => item.id === panelItemId) ?? null;
 
-  const closePanel = () => setOpenItemId(null);
+  const closePanel = useCallback(() => setOpenItemId(null), []);
 
   const toggleFlyout = (itemId: string) => {
     if (openItemId === itemId) {
@@ -61,28 +62,7 @@ export function Sidebar() {
     setOpenItemId(null);
   }, [pathname, profile.id]);
 
-  useEffect(() => {
-    if (!openItemId) return;
-
-    function handlePointerDown(event: PointerEvent) {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
-        closePanel();
-      }
-    }
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") closePanel();
-    }
-
-    document.addEventListener("pointerdown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("pointerdown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [openItemId]);
+  useDismissable(openItemId !== null, closePanel, containerRef);
 
   return (
     <div ref={containerRef} className="flex h-full">

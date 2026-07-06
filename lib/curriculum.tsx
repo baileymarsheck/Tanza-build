@@ -14,6 +14,7 @@ import {
 } from "@/lib/curriculum-data";
 import { isReleased } from "@/lib/availability";
 import { makeId } from "@/lib/id";
+import { getStoredItem, setStoredItem } from "@/lib/storage";
 import type {
   ClassRecord,
   ClassResource,
@@ -51,24 +52,20 @@ export function CurriculumProvider({
   // Load any admin edits from a previous session. Runs client-side only, so
   // the first render matches the server (seed) and there's no hydration gap.
   useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem(CURRICULUM_STORAGE_KEY);
-      if (stored) {
+    const stored = getStoredItem(CURRICULUM_STORAGE_KEY);
+    if (stored) {
+      try {
         setModules(JSON.parse(stored) as ModuleWithClasses[]);
+      } catch {
+        // Corrupt storage — keep the seed.
       }
-    } catch {
-      // Corrupt or unavailable storage — keep the seed.
     }
   }, []);
 
   // Persist every change so admin edits survive a refresh.
   const commit = useCallback((next: ModuleWithClasses[]) => {
     setModules(next);
-    try {
-      window.localStorage.setItem(CURRICULUM_STORAGE_KEY, JSON.stringify(next));
-    } catch {
-      // Ignore storage write failures — in-memory state still updates.
-    }
+    setStoredItem(CURRICULUM_STORAGE_KEY, JSON.stringify(next));
   }, []);
 
   const getClass = useCallback(
